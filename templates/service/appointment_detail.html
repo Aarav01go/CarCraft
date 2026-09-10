@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Service Ticket #APT-{{ appointment.id }} | CarCraft{% endblock %}
+
+{% block content %}
+<div class="container py-3" style="max-width: 900px;">
+    <!-- Breadcrumb -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb small mb-0">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-secondary">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'service:bay_board' %}" class="text-secondary">Workshop</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'service:appointment_list' %}" class="text-secondary">Appointments</a></li>
+                <li class="breadcrumb-item active text-dark fw-bold">#APT-{{ appointment.id }}</li>
+            </ol>
+        </nav>
+        <div class="d-flex gap-2">
+            <button onclick="window.print();" class="btn btn-workshop btn-sm">
+                <i class="bi bi-printer"></i> Print Ticket
+            </button>
+            <a href="{% url 'service:bay_board' %}?date={{ appointment.date|date:'Y-m-d' }}" class="btn btn-dark-panel btn-sm">
+                <i class="bi bi-calendar3"></i> Bay Board
+            </a>
+        </div>
+    </div>
+
+    <!-- Ticket Card -->
+    <div class="cc-card p-4 p-md-5 mb-4 service-ticket {{ appointment.status_ticket_class }}" style="border-left-width: 6px;">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 border-bottom border-subtle pb-3 mb-4">
+            <div>
+                <span class="badge bg-dark font-monospace text-white mb-2">WORK ORDER TICKET</span>
+                <h2 class="text-dark mb-0">#APT-{{ appointment.id }} &bull; {{ appointment.service_label_short }}</h2>
+                <div class="text-secondary small mt-1">Booked on {{ appointment.created_at|date:"d-m-Y, h:i A" }}</div>
+            </div>
+            <div>
+                <span class="badge {{ appointment.status_ticket_class }} fs-6 px-3 py-2 text-uppercase">
+                    {{ appointment.get_status_display }}
+                </span>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <!-- Schedule & Bay Info -->
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded-3 border border-subtle h-100">
+                    <h6 class="text-dark mb-3">Schedule & Bay Assignment</h6>
+                    <table class="table table-sm table-borderless text-dark small mb-0">
+                        <tr>
+                            <td class="text-secondary" style="width: 130px;">Date:</td>
+                            <td class="font-monospace fw-bold">{{ appointment.date|date:"l, d-m-Y" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-secondary">Time Slot:</td>
+                            <td class="font-monospace fw-bold">{{ appointment.get_time_slot_display }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-secondary">Assigned Bay:</td>
+                            <td class="fw-bold">{{ appointment.assigned_bay.name|default:'Unassigned' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-secondary">Technician:</td>
+                            <td>{{ appointment.assigned_bay.assigned_technician|default:'To Be Assigned' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-secondary">Estimated Cost:</td>
+                            <td class="font-monospace fw-bold fs-6">{{ appointment.estimated_cost|inr }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Vehicle & Customer Info -->
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded-3 border border-subtle h-100">
+                    <h6 class="text-dark mb-3">Vehicle & Customer</h6>
+                    <table class="table table-sm table-borderless text-dark small mb-0">
+                        <tr>
+                            <td class="text-secondary" style="width: 130px;">Customer:</td>
+                            <td class="fw-bold text-dark">{{ appointment.customer_name }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-secondary">Contact:</td>
+                            <td>{{ appointment.customer_phone }} &bull; {{ appointment.customer_email }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-secondary">Vehicle:</td>
+                            <td class="fw-bold text-dark">{{ appointment.vehicle_description }}</td>
+                        </tr>
+                        {% if appointment.vehicle_vin %}
+                        <tr>
+                            <td class="text-secondary">VIN:</td>
+                            <td class="font-monospace text-secondary">{{ appointment.vehicle_vin }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if appointment.vehicle_odometer %}
+                        <tr>
+                            <td class="text-secondary">Odometer:</td>
+                            <td class="font-monospace">{{ appointment.vehicle_odometer|indian_number }} km</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {% if appointment.notes %}
+        <div class="mb-4">
+            <h6 class="text-dark mb-2">Customer Request</h6>
+            <div class="p-3 bg-light rounded-3 border border-subtle text-secondary small">
+                {{ appointment.notes }}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Technician Workshop Status Updater -->
+        <div class="p-4 contrast-panel">
+            <h5 class="text-white mb-3">Technician Workshop Log & Status Update</h5>
+            
+            <form method="post" action="{% url 'service:update_status' appointment.id %}">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label text-secondary small">Update Status</label>
+                        <select name="status" class="form-select form-select-sm">
+                            <option value="scheduled" {% if appointment.status == 'scheduled' %}selected{% endif %}>Scheduled</option>
+                            <option value="in_progress" {% if appointment.status == 'in_progress' %}selected{% endif %}>In Progress (On Lift)</option>
+                            <option value="completed" {% if appointment.status == 'completed' %}selected{% endif %}>Completed (Ready for Pickup)</option>
+                            <option value="cancelled" {% if appointment.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label text-secondary small">Technician Notes</label>
+                        <textarea name="internal_notes" class="form-control form-control-sm" rows="2" placeholder="Torque specs verified, diagnostics clean...">{{ appointment.internal_notes }}</textarea>
+                    </div>
+                    <div class="col-12 text-end">
+                        <button type="submit" class="btn btn-apex btn-sm px-3">
+                            Save Work Order Updates
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

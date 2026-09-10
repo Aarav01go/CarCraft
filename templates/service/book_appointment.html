@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Book Workshop Service Lift | CarCraft{% endblock %}
+
+{% block content %}
+<div class="container py-3" style="max-width: 900px;">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-secondary">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'service:bay_board' %}" class="text-secondary">Service & Workshop</a></li>
+            <li class="breadcrumb-item active text-dark fw-bold">Book Service Bay</li>
+        </ol>
+    </nav>
+
+    <div class="cc-card p-4 p-md-5">
+        <div class="d-flex align-items-center gap-3 mb-4 border-bottom border-subtle pb-3">
+            <div class="brand-icon-wrap" style="width: 48px; height: 48px;">
+                <i class="bi bi-wrench-adjustable fs-4 text-accent"></i>
+            </div>
+            <div>
+                <h3 class="text-dark mb-0">Book Service Lift</h3>
+                <span class="text-secondary small">Automatic bay & technician assignment with real-time conflict prevention</span>
+            </div>
+        </div>
+
+        <form method="post" novalidate id="serviceBookingForm">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger mb-4">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <!-- Section 1: Customer Contact -->
+            <h5 class="text-dark mb-3">1. Customer Information</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.customer_name.id_for_label }}">Full Name *</label>
+                    {{ form.customer_name }}
+                    {% if form.customer_name.errors %}<div class="text-danger small">{{ form.customer_name.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.customer_email.id_for_label }}">Email Address *</label>
+                    {{ form.customer_email }}
+                    {% if form.customer_email.errors %}<div class="text-danger small">{{ form.customer_email.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.customer_phone.id_for_label }}">Phone Number *</label>
+                    {{ form.customer_phone }}
+                    {% if form.customer_phone.errors %}<div class="text-danger small">{{ form.customer_phone.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+
+            <!-- Section 2: Vehicle Specs -->
+            <h5 class="text-dark mb-3">2. Vehicle Identification</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form.vehicle_description.id_for_label }}">Vehicle (Year, Make & Model) *</label>
+                    {{ form.vehicle_description }}
+                    {% if form.vehicle_description.errors %}<div class="text-danger small">{{ form.vehicle_description.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="{{ form.vehicle_vin.id_for_label }}">VIN (Optional)</label>
+                    {{ form.vehicle_vin }}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="{{ form.vehicle_odometer.id_for_label }}">Current Odometer (km)</label>
+                    {{ form.vehicle_odometer }}
+                </div>
+            </div>
+
+            <!-- Section 3: Service Type & Live Scheduling -->
+            <h5 class="text-dark mb-3">3. Service Package & Date Slot</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-12">
+                    <label class="form-label" for="{{ form.service_type.id_for_label }}">Service Package / Calibration *</label>
+                    {{ form.service_type }}
+                    {% if form.service_type.errors %}<div class="text-danger small">{{ form.service_type.errors.0 }}</div>{% endif %}
+                </div>
+                
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form.date.id_for_label }}">Service Date *</label>
+                    {{ form.date }}
+                    {% if form.date.errors %}<div class="text-danger small">{{ form.date.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form.time_slot.id_for_label }}">Time Slot *</label>
+                    {{ form.time_slot }}
+                    {% if form.time_slot.errors %}<div class="text-danger small">{{ form.time_slot.errors.0 }}</div>{% endif %}
+                </div>
+
+                <!-- Real-Time Bay Availability Feedback Widget -->
+                <div class="col-12">
+                    <div class="p-3 bg-light rounded-3 border border-subtle">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="small text-dark fw-bold">
+                                <i class="bi bi-cpu text-dark me-1"></i> Live Allocation Engine:
+                            </span>
+                            <span id="bayAvailabilityBadge" class="badge bg-dark text-white">
+                                Select date & time slot to check
+                            </span>
+                        </div>
+                        <div id="bayAvailabilityDetails"></div>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label" for="{{ form.notes.id_for_label }}">Customer Notes & Performance Concerns</label>
+                    {{ form.notes }}
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top border-subtle">
+                <a href="{% url 'service:bay_board' %}" class="btn btn-workshop">
+                    <i class="bi bi-arrow-left"></i> Bay Board
+                </a>
+                <button type="submit" id="bookingSubmitBtn" class="btn btn-apex px-4 py-2 fs-6">
+                    Confirm Workshop Booking
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

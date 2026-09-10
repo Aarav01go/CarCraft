@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Checkout | CarCraft Store{% endblock %}
+
+{% block content %}
+<div class="container py-3" style="max-width: 950px;">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-secondary">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'store:catalog' %}" class="text-secondary">Parts Store</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'store:cart_detail' %}" class="text-secondary">Cart</a></li>
+            <li class="breadcrumb-item active text-dark fw-bold">Checkout</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <!-- Checkout Form Column -->
+        <div class="col-lg-7">
+            <div class="cc-card p-4 p-md-5">
+                <div class="d-flex align-items-center gap-3 mb-4 border-bottom border-subtle pb-3">
+                    <div class="brand-icon-wrap" style="width: 44px; height: 44px;">
+                        <i class="bi bi-credit-card-2-front-fill fs-4"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-dark mb-0">Delivery & Customer Info</h4>
+                        <span class="text-secondary small">Enter shipping destination and contact details</span>
+                    </div>
+                </div>
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger mb-3">{{ form.non_field_errors }}</div>
+                    {% endif %}
+
+                    <!-- Customer Contact -->
+                    <h6 class="text-dark mb-3">Customer Identification</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-12">
+                            <label class="form-label" for="{{ form.customer_name.id_for_label }}">Full Name *</label>
+                            {{ form.customer_name }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ form.customer_email.id_for_label }}">Email Address *</label>
+                            {{ form.customer_email }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ form.customer_phone.id_for_label }}">Phone Number *</label>
+                            {{ form.customer_phone }}
+                        </div>
+                    </div>
+
+                    <!-- Shipping Address -->
+                    <h6 class="text-dark mb-3">Shipping Address</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-12">
+                            <label class="form-label" for="{{ form.shipping_address.id_for_label }}">Street Address *</label>
+                            {{ form.shipping_address }}
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label" for="{{ form.city.id_for_label }}">City *</label>
+                            {{ form.city }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="{{ form.state.id_for_label }}">State *</label>
+                            {{ form.state }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="{{ form.postal_code.id_for_label }}">PIN Code *</label>
+                            {{ form.postal_code }}
+                        </div>
+                    </div>
+
+                    <!-- Payment Method -->
+                    <h6 class="text-dark mb-3">Payment Method</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-12">
+                            <label class="form-label" for="{{ form.payment_method.id_for_label }}">Payment Terms *</label>
+                            {{ form.payment_method }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="{{ form.notes.id_for_label }}">Special Delivery Notes</label>
+                            {{ form.notes }}
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-apex py-3 fs-6">
+                            Place Order ({{ total|inr }})
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Order Summary Column -->
+        <div class="col-lg-5">
+            <div class="contrast-panel p-4">
+                <h5 class="text-white mb-3">Items in Order ({{ cart|length }})</h5>
+
+                <div class="d-flex flex-column gap-2 mb-4">
+                    {% for item in cart %}
+                    <div class="d-flex justify-content-between align-items-center p-2 rounded-3 bg-dark border border-secondary border-opacity-50 small">
+                        <div class="d-flex align-items-center gap-2">
+                            <img src="{{ item.image_url }}" alt="{{ item.name }}" class="rounded-2" style="width: 40px; height: 40px; object-fit: cover;">
+                            <div>
+                                <strong class="text-white">{{ item.name }}</strong>
+                                <div class="text-secondary">Qty: {{ item.quantity }} &bull; SKU: {{ item.sku }}</div>
+                            </div>
+                        </div>
+                        <span class="text-accent font-monospace fw-bold">{{ item.total_price|inr }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="border-top border-secondary border-opacity-50 pt-3 small">
+                    <div class="d-flex justify-content-between text-secondary mb-1">
+                        <span>Subtotal:</span>
+                        <span class="text-white font-monospace">{{ subtotal|inr }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-secondary mb-1">
+                        <span>GST (18%):</span>
+                        <span class="text-white font-monospace">{{ tax|inr }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-secondary mb-2">
+                        <span>Shipping / Logistics:</span>
+                        <span class="font-monospace text-accent">{% if shipping == 0 %}FREE{% else %}{{ shipping|inr }}{% endif %}</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-white fw-bold fs-5 pt-2 border-top border-secondary border-opacity-50">
+                        <span>Total Due:</span>
+                        <span class="text-accent font-monospace">{{ total|inr }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

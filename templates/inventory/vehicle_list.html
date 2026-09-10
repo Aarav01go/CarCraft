@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Vehicle Inventory | CarCraft Showroom{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-4">
+    <!-- Header & Statistics Strip -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <h2 class="mb-0 text-dark">Vehicle Inventory</h2>
+                <span class="badge bg-dark font-monospace text-white">{{ stats.total }} Units</span>
+            </div>
+            <span class="text-secondary small">Showroom floor, incoming electric allocation & sold historical archive</span>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'inventory:vehicle_add' %}" class="btn btn-apex">
+                <i class="bi bi-plus-lg"></i> Add New Vehicle
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Status Filter Bar -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-sm-6">
+            <a href="{% url 'inventory:vehicle_list' %}" class="text-decoration-none">
+                <div class="stat-tile {% if not current_status %}border-dark shadow-md{% endif %}">
+                    <div class="stat-label">Total Fleet</div>
+                    <div class="stat-value text-dark">{{ stats.total }} <span class="fs-6 text-muted fw-normal">vehicles</span></div>
+                </div>
+            </a>
+        </div>
+        <div class="col-xl-3 col-sm-6">
+            <a href="{% url 'inventory:vehicle_list' %}?status=available" class="text-decoration-none">
+                <div class="stat-tile {% if current_status == 'available' %}border-dark shadow-md{% endif %}">
+                    <div class="stat-label">Available Showroom</div>
+                    <div class="stat-value text-dark">{{ stats.available }} <span class="fs-6 text-muted fw-normal">units</span></div>
+                </div>
+            </a>
+        </div>
+        <div class="col-xl-3 col-sm-6">
+            <a href="{% url 'inventory:vehicle_list' %}?status=pending" class="text-decoration-none">
+                <div class="stat-tile {% if current_status == 'pending' %}border-dark shadow-md{% endif %}">
+                    <div class="stat-label">Pending Sale / Hold</div>
+                    <div class="stat-value text-dark">{{ stats.pending }} <span class="fs-6 text-muted fw-normal">units</span></div>
+                </div>
+            </a>
+        </div>
+        <div class="col-xl-3 col-sm-6">
+            <a href="{% url 'inventory:vehicle_list' %}?status=sold" class="text-decoration-none">
+                <div class="stat-tile {% if current_status == 'sold' %}border-dark shadow-md{% endif %}">
+                    <div class="stat-label">Sold Archive</div>
+                    <div class="stat-value text-dark">{{ stats.sold }} <span class="fs-6 text-muted fw-normal">units</span></div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter & Search Controls -->
+    <div class="cc-card p-3 mb-4">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-lg-4 col-md-6">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white border-0 text-secondary"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" value="{{ request.GET.q|default:'' }}" class="form-control" placeholder="Search make, model, VIN, trim...">
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-3 col-6">
+                <select name="type" class="form-select form-select-sm">
+                    <option value="">All Body Types</option>
+                    {% for code, label in types %}
+                        <option value="{{ code }}" {% if request.GET.type == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-3 col-6">
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">All Statuses</option>
+                    <option value="available" {% if request.GET.status == 'available' %}selected{% endif %}>Available</option>
+                    <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending Sale</option>
+                    <option value="sold" {% if request.GET.status == 'sold' %}selected{% endif %}>Sold</option>
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6 col-6">
+                <select name="sort" class="form-select form-select-sm">
+                    <option value="-created_at" {% if request.GET.sort == '-created_at' %}selected{% endif %}>Newest In Stock</option>
+                    <option value="price" {% if request.GET.sort == 'price' %}selected{% endif %}>Price: Low to High</option>
+                    <option value="-price" {% if request.GET.sort == '-price' %}selected{% endif %}>Price: High to Low</option>
+                    <option value="odometer" {% if request.GET.sort == 'odometer' %}selected{% endif %}>Lowest Odometer</option>
+                    <option value="-year" {% if request.GET.sort == '-year' %}selected{% endif %}>Model Year (Newest)</option>
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6 col-6 d-flex gap-2">
+                <button type="submit" class="btn btn-dark-panel btn-sm w-100">
+                    <i class="bi bi-funnel"></i> Filter
+                </button>
+                {% if request.GET %}
+                <a href="{% url 'inventory:vehicle_list' %}" class="btn btn-workshop btn-sm" title="Clear Filters">
+                    <i class="bi bi-x"></i>
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Vehicles Grid -->
+    <div class="row g-4 mb-4">
+        {% for vehicle in vehicles %}
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="vehicle-card">
+                <!-- VIN Header Strip -->
+                <div class="vin-plate-header">
+                    <div class="vin-stamp">
+                        <i class="bi bi-qr-code vin-stamp-icon"></i>
+                        <span title="{{ vehicle.vin }}">{{ vehicle.vin|truncatechars:14 }}</span>
+                    </div>
+                    <span id="vehicle-badge-{{ vehicle.id }}" class="badge {{ vehicle.status_badge_class }}">
+                        {{ vehicle.get_status_display }}
+                    </span>
+                </div>
+
+                <!-- Image & Price -->
+                <div class="vehicle-img-wrapper">
+                    <img src="{{ vehicle.display_image }}" alt="{{ vehicle.title }}" loading="lazy">
+                    <span class="vehicle-type-tag">{{ vehicle.type }}</span>
+                    <span class="vehicle-price-tag">{{ vehicle.price|inr }}</span>
+                </div>
+
+                <!-- Content -->
+                <div class="p-3 d-flex flex-column flex-grow-1">
+                    <h5 class="mb-1 text-truncate">
+                        <a href="{{ vehicle.get_absolute_url }}" class="text-dark text-decoration-none">
+                            {{ vehicle.year }} {{ vehicle.make }} {{ vehicle.model }}
+                        </a>
+                    </h5>
+                    {% if vehicle.trim %}
+                        <div class="text-secondary small fw-bold mb-2 text-truncate">{{ vehicle.trim }}</div>
+                    {% else %}
+                        <div class="text-muted small mb-2">&nbsp;</div>
+                    {% endif %}
+
+                    <!-- Specs Pills -->
+                    <div class="vehicle-spec-pills">
+                        <span class="spec-pill"><i class="bi bi-speedometer2"></i> {{ vehicle.odometer|indian_number }} km</span>
+                        <span class="spec-pill"><i class="bi bi-fuel-pump"></i> {{ vehicle.fuel_type }}</span>
+                        <span class="spec-pill"><i class="bi bi-gear"></i> {{ vehicle.transmission|truncatechars:10 }}</span>
+                        {% if vehicle.horsepower %}
+                            <span class="spec-pill"><i class="bi bi-lightning-charge"></i> {{ vehicle.horsepower }} HP</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="mt-auto pt-3 border-top border-subtle d-flex justify-content-between align-items-center">
+                        <a href="{{ vehicle.get_absolute_url }}" class="btn btn-workshop btn-sm">
+                            <i class="bi bi-eye"></i> Details
+                        </a>
+
+                        <!-- Quick Status Changer Dropdown -->
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-workshop btn-sm dropdown-toggle" data-bs-toggle="dropdown" title="Change Status">
+                                Status
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-3">
+                                <li>
+                                    <button class="dropdown-item quick-vehicle-status-btn text-success small" data-vehicle-id="{{ vehicle.id }}" data-status="available">
+                                        <i class="bi bi-check-circle me-1"></i> Available
+                                    </button>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item quick-vehicle-status-btn text-warning small" data-vehicle-id="{{ vehicle.id }}" data-status="pending">
+                                        <i class="bi bi-clock-history me-1"></i> Pending Sale
+                                    </button>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item quick-vehicle-status-btn text-danger small" data-vehicle-id="{{ vehicle.id }}" data-status="sold">
+                                        <i class="bi bi-bag-check me-1"></i> Sold
+                                    </button>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-secondary small" href="{% url 'inventory:vehicle_edit' vehicle.id %}">
+                                        <i class="bi bi-pencil me-1"></i> Edit Vehicle
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <div class="cc-card p-5 max-w-md mx-auto">
+                <i class="bi bi-car-front fs-1 text-muted mb-3 d-block"></i>
+                <h4 class="text-dark">No Vehicles Match Your Filter</h4>
+                <p class="text-secondary small mb-4">Try resetting your search filters or add a new vehicle to the inventory.</p>
+                <a href="{% url 'inventory:vehicle_list' %}" class="btn btn-workshop btn-sm me-2">Clear All Filters</a>
+                <a href="{% url 'inventory:vehicle_add' %}" class="btn btn-apex btn-sm">+ Add Vehicle</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav aria-label="Inventory pagination">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">&laquo;</a>
+                </li>
+            {% endif %}
+
+            {% for num in paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">&raquo;</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

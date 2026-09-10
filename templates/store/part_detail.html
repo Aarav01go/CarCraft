@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}{{ part.name }} | CarCraft Parts{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-4">
+    <!-- Breadcrumbs -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-secondary">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'store:catalog' %}" class="text-secondary">Parts Store</a></li>
+            {% if part.category %}
+            <li class="breadcrumb-item"><a href="{% url 'store:catalog' %}?category={{ part.category.slug }}" class="text-secondary">{{ part.category.name }}</a></li>
+            {% endif %}
+            <li class="breadcrumb-item active text-dark fw-bold" aria-current="page">{{ part.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4 mb-5">
+        <!-- Part Image Showcase -->
+        <div class="col-lg-6">
+            <div class="cc-card p-3">
+                <div class="rounded-3 overflow-hidden bg-light d-flex align-items-center justify-content-center" style="min-height: 380px;">
+                    <img src="{{ part.display_image }}" alt="{{ part.name }}" class="img-fluid rounded-3" style="max-height: 400px; object-fit: cover;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Part Details & Cart Form -->
+        <div class="col-lg-6">
+            <div class="cc-card p-4 h-100 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="badge bg-dark font-monospace text-white">
+                        SKU: {{ part.sku }}
+                    </span>
+                    <span class="badge bg-light text-dark border border-subtle">
+                        {{ part.category.name|default:'Performance Hardware' }}
+                    </span>
+                </div>
+
+                <h3 class="text-dark mb-1">{{ part.name }}</h3>
+                <div class="text-secondary mb-3">Brand: <strong class="text-dark">{{ part.brand }}</strong></div>
+
+                <!-- Price Tag Panel -->
+                <div class="contrast-panel p-3 mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-secondary small">MSRP / Workshop Price</div>
+                            <div class="display-6 fw-bold text-accent font-monospace">{{ part.price|inr }}</div>
+                        </div>
+                        <div>
+                            {% if part.stock > 5 %}
+                                <div class="badge bg-success text-white p-2">
+                                    <i class="bi bi-check-circle me-1"></i> In Stock ({{ part.stock }})
+                                </div>
+                            {% elif part.stock > 0 %}
+                                <div class="badge bg-warning text-dark p-2">
+                                    <i class="bi bi-exclamation me-1"></i> Low Stock ({{ part.stock }})
+                                </div>
+                            {% else %}
+                                <div class="badge bg-danger text-white p-2">
+                                    <i class="bi bi-x me-1"></i> Out of Stock
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add to Cart Form -->
+                {% if part.is_in_stock %}
+                <form method="post" action="{% url 'store:cart_add' part.id %}" class="mb-4">
+                    {% csrf_token %}
+                    <div class="row g-2 align-items-center">
+                        <div class="col-sm-4">
+                            <label class="form-label small mb-1">Quantity</label>
+                            <input type="number" name="quantity" value="1" min="1" max="{{ part.stock }}" class="form-control text-center font-monospace">
+                        </div>
+                        <div class="col-sm-8 d-flex align-items-end">
+                            <button type="submit" class="btn btn-apex w-100 py-2">
+                                <i class="bi bi-bag-plus"></i> Add to Work Order / Cart
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                {% endif %}
+
+                <!-- Description & Fitment Specs -->
+                <div class="border-top border-subtle pt-3">
+                    <h5 class="text-dark mb-2">Description</h5>
+                    <p class="text-secondary small mb-3">{{ part.description|default:"OEM performance specification component engineered for precision automotive applications." }}</p>
+
+                    {% if part.specifications %}
+                    <h5 class="text-dark mb-2">Fitment & Technical Specs</h5>
+                    <div class="p-3 bg-light rounded-3 border border-subtle small font-monospace text-dark">
+                        {{ part.specifications|linebreaks }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="mt-auto pt-3 border-top border-subtle d-flex justify-content-between">
+                    <a href="{% url 'store:part_edit' part.id %}" class="btn btn-workshop btn-sm">
+                        <i class="bi bi-pencil"></i> Edit Part
+                    </a>
+                    <a href="{% url 'store:catalog' %}" class="btn btn-workshop btn-sm">
+                        <i class="bi bi-arrow-left"></i> Catalog
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

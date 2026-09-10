@@ -1,0 +1,916 @@
+/* ==========================================================================
+   CARCRAFT: MODERN AUTOMOTIVE & EV DASHBOARD DESIGN SYSTEM
+   Palette:
+   - Base Background:   #F0F0EE (Soft light grey, warm & paper-like)
+   - Surface / Card:    #FFFFFF (Pure white, subtle soft ambient shadow)
+   - Primary Text:      #161616 (Near-black)
+   - Secondary / Muted: #8C8C8C (Mid grey for labels & supporting copy)
+   - Single Accent:     #D6F53C (Punchy neon lime-yellow, used sparingly for primary CTAs & active states)
+   - Contrast Panels:   #161616 - #1E1E1E (Rich near-black for feature depth)
+   - Dividers/Borders:  #E5E5E3 (Thin & understated)
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root {
+  /* Exact User Color Variables */
+  --cc-base-bg:         #F0F0EE;
+  --cc-surface:         #FFFFFF;
+  --cc-text-primary:    #161616;
+  --cc-text-secondary:  #8C8C8C;
+  --cc-text-muted:      #8C8C8C;
+  --cc-accent:          #D6F53C;
+  --cc-accent-hover:    #c4e526;
+  --cc-contrast-panel:  #161616;
+  --cc-contrast-dark:   #1E1E1E;
+  --cc-contrast-elev:   #252525;
+  --cc-border:          #E5E5E3;
+  --cc-border-subtle:   #F0F0EE;
+
+  /* Typography */
+  --cc-font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --cc-font-mono:   'JetBrains Mono', monospace;
+
+  /* Soft Ambient Shadows */
+  --cc-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.02);
+  --cc-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.04), 0 1px 4px rgba(0, 0, 0, 0.02);
+  --cc-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.03);
+  --cc-shadow-contrast: 0 10px 30px rgba(22, 22, 22, 0.15);
+
+  /* Radii */
+  --cc-radius-sm: 8px;
+  --cc-radius-md: 14px;
+  --cc-radius-lg: 20px;
+  --cc-radius-pill: 9999px;
+
+  /* Transitions */
+  --cc-transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Global Reset & Typography */
+body {
+  font-family: var(--cc-font-family);
+  background-color: var(--cc-base-bg);
+  color: var(--cc-text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+main {
+  flex: 1 0 auto;
+}
+
+h1, h2, h3, h4, h5, h6, .brand-font {
+  font-family: var(--cc-font-family);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--cc-text-primary);
+}
+
+.font-monospace {
+  font-family: var(--cc-font-mono) !important;
+}
+
+a {
+  color: var(--cc-text-primary);
+  text-decoration: none;
+  transition: var(--cc-transition);
+}
+
+a:hover {
+  color: #000000;
+}
+
+/* Accessibility Focus States */
+:focus-visible {
+  outline: 2px solid var(--cc-contrast-panel) !important;
+  outline-offset: 2px !important;
+}
+
+/* Text Utility Overrides */
+.text-primary {
+  color: var(--cc-text-primary) !important;
+}
+
+.text-secondary, .text-muted {
+  color: var(--cc-text-secondary) !important;
+}
+
+.text-accent, .text-lime {
+  color: #9ab818 !important; /* legible text variant for light bg */
+}
+
+.contrast-panel .text-accent, .contrast-panel .text-lime, .bg-dark .text-accent, .btn-dark-panel .text-accent {
+  color: var(--cc-accent) !important;
+}
+
+.text-dark {
+  color: var(--cc-text-primary) !important;
+}
+
+.text-warning, .brand-accent {
+  color: var(--cc-text-primary) !important;
+}
+
+.border-subtle {
+  border-color: var(--cc-border) !important;
+}
+
+/* ==========================================================================
+   NAVBAR & TOP BANNER
+   ========================================================================== */
+.cc-top-banner {
+  background-color: var(--cc-contrast-panel);
+  color: var(--cc-text-secondary);
+  font-size: 0.8rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cc-top-banner a {
+  color: var(--cc-text-secondary);
+}
+
+.cc-top-banner a:hover {
+  color: var(--cc-accent);
+}
+
+.cc-navbar {
+  background-color: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--cc-border);
+  padding: 0.85rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 1040;
+  box-shadow: var(--cc-shadow-sm);
+}
+
+.cc-brand {
+  font-weight: 800;
+  font-size: 1.35rem;
+  letter-spacing: -0.04em;
+  color: var(--cc-text-primary) !important;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.brand-icon-wrap {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--cc-radius-sm);
+  background: var(--cc-contrast-panel);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cc-accent);
+  font-size: 1.15rem;
+}
+
+.brand-accent-tag {
+  background-color: var(--cc-accent);
+  color: var(--cc-contrast-panel);
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--cc-radius-pill);
+  letter-spacing: 0.04em;
+}
+
+.cc-nav-link {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--cc-text-secondary) !important;
+  padding: 0.5rem 0.9rem !important;
+  border-radius: var(--cc-radius-pill);
+  transition: var(--cc-transition);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.cc-nav-link:hover {
+  color: var(--cc-text-primary) !important;
+  background-color: var(--cc-base-bg);
+}
+
+.cc-nav-link.active {
+  color: var(--cc-text-primary) !important;
+  background-color: var(--cc-base-bg);
+  font-weight: 700;
+}
+
+.cart-btn-badge {
+  background-color: var(--cc-accent);
+  color: var(--cc-contrast-panel);
+  font-family: var(--cc-font-mono);
+  font-weight: 800;
+  font-size: 0.75rem;
+  padding: 0.2em 0.55em;
+  border-radius: var(--cc-radius-pill);
+}
+
+/* ==========================================================================
+   BUTTONS (Minimal & Punchy)
+   ========================================================================== */
+.btn {
+  font-weight: 700;
+  font-size: 0.88rem;
+  letter-spacing: -0.01em;
+  border-radius: var(--cc-radius-pill);
+  padding: 0.55rem 1.25rem;
+  transition: var(--cc-transition);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+/* Primary Punchy Neon CTA (#D6F53C) */
+.btn-apex {
+  background-color: var(--cc-accent);
+  color: var(--cc-contrast-panel) !important;
+  border: 1px solid var(--cc-accent);
+  box-shadow: 0 2px 8px rgba(214, 245, 60, 0.25);
+}
+
+.btn-apex:hover, .btn-apex:focus {
+  background-color: var(--cc-accent-hover);
+  color: #000000 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(214, 245, 60, 0.4);
+}
+
+/* Contrast Dark Panel Button (#161616) */
+.btn-dark-panel, .btn-cyan {
+  background-color: var(--cc-contrast-panel);
+  color: #FFFFFF !important;
+  border: 1px solid var(--cc-contrast-panel);
+}
+
+.btn-dark-panel:hover, .btn-cyan:hover {
+  background-color: var(--cc-contrast-elev);
+  color: var(--cc-accent) !important;
+  border-color: var(--cc-contrast-elev);
+  transform: translateY(-1px);
+}
+
+/* Surface / Minimal Button (#FFFFFF with #E5E5E3 border) */
+.btn-workshop, .btn-outline-apex, .btn-outline-light {
+  background-color: var(--cc-surface);
+  color: var(--cc-text-primary) !important;
+  border: 1px solid var(--cc-border);
+  box-shadow: var(--cc-shadow-sm);
+}
+
+.btn-workshop:hover, .btn-outline-apex:hover, .btn-outline-light:hover {
+  background-color: var(--cc-base-bg);
+  border-color: #d1d1cf;
+  color: #000000 !important;
+}
+
+.btn-sm {
+  padding: 0.35rem 0.85rem;
+  font-size: 0.8rem;
+  border-radius: var(--cc-radius-pill);
+}
+
+/* ==========================================================================
+   CARDS & CONTRAST PANELS
+   ========================================================================== */
+.cc-card {
+  background-color: var(--cc-surface);
+  border: 1px solid var(--cc-border);
+  border-radius: var(--cc-radius-md);
+  box-shadow: var(--cc-shadow-md);
+  transition: var(--cc-transition);
+  overflow: hidden;
+}
+
+.cc-card:hover {
+  box-shadow: var(--cc-shadow-lg);
+}
+
+/* Rich Near-Black Contrast Panels (#161616) */
+.contrast-panel, .bg-dark-panel {
+  background-color: var(--cc-contrast-panel) !important;
+  color: #FFFFFF !important;
+  border-radius: var(--cc-radius-lg);
+  border: 1px solid var(--cc-contrast-dark);
+  box-shadow: var(--cc-shadow-contrast);
+}
+
+.contrast-panel h1, .contrast-panel h2, .contrast-panel h3, .contrast-panel h4, .contrast-panel h5, .contrast-panel h6 {
+  color: #FFFFFF !important;
+}
+
+.contrast-panel .text-muted, .contrast-panel .text-secondary {
+  color: var(--cc-text-secondary) !important;
+}
+
+/* Stat Tiles */
+.stat-tile {
+  background-color: var(--cc-surface);
+  border: 1px solid var(--cc-border);
+  border-radius: var(--cc-radius-md);
+  padding: 1.25rem;
+  box-shadow: var(--cc-shadow-sm);
+  transition: var(--cc-transition);
+}
+
+.stat-tile:hover {
+  box-shadow: var(--cc-shadow-md);
+  transform: translateY(-2px);
+}
+
+.stat-tile.stat-dark {
+  background-color: var(--cc-contrast-panel);
+  border-color: var(--cc-contrast-dark);
+  color: #FFFFFF;
+}
+
+.stat-tile.stat-dark .stat-label {
+  color: var(--cc-text-secondary);
+}
+
+.stat-tile.stat-dark .stat-value {
+  color: var(--cc-accent);
+}
+
+.stat-value {
+  font-weight: 800;
+  font-size: 1.75rem;
+  letter-spacing: -0.03em;
+  color: var(--cc-text-primary);
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cc-text-secondary);
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   1. VEHICLE INVENTORY CARDS (Minimalist Luxury)
+   ========================================================================== */
+.vehicle-card {
+  background-color: var(--cc-surface);
+  border: 1px solid var(--cc-border);
+  border-radius: var(--cc-radius-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-shadow: var(--cc-shadow-sm);
+  transition: var(--cc-transition);
+}
+
+.vehicle-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--cc-shadow-lg);
+}
+
+/* Minimal VIN Tag Strip */
+.vin-plate-header {
+  background-color: #FAFAFA;
+  border-bottom: 1px solid var(--cc-border);
+  padding: 0.5rem 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.vin-stamp {
+  font-family: var(--cc-font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--cc-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.vin-stamp-icon {
+  color: var(--cc-text-primary);
+  font-size: 0.8rem;
+}
+
+.vehicle-img-wrapper {
+  position: relative;
+  height: 220px;
+  overflow: hidden;
+  background-color: #EAEAEA;
+}
+
+.vehicle-img-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.vehicle-card:hover .vehicle-img-wrapper img {
+  transform: scale(1.04);
+}
+
+.vehicle-type-tag {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(4px);
+  color: var(--cc-text-primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--cc-radius-pill);
+  border: 1px solid var(--cc-border);
+}
+
+.vehicle-price-tag {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background-color: var(--cc-contrast-panel);
+  color: var(--cc-accent);
+  font-weight: 800;
+  font-size: 1.15rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--cc-radius-pill);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.vehicle-spec-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.65rem 0;
+}
+
+.spec-pill {
+  background-color: var(--cc-base-bg);
+  color: var(--cc-text-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--cc-radius-pill);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* Status Badges */
+.badge-status-available {
+  background-color: #EBFEE7;
+  color: #1F7A18;
+  border: 1px solid #D2F7CD;
+  font-weight: 700;
+  font-size: 0.72rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--cc-radius-pill);
+  text-transform: uppercase;
+}
+
+.badge-status-pending {
+  background-color: #FFF8E6;
+  color: #9C6C00;
+  border: 1px solid #FFE9B3;
+  font-weight: 700;
+  font-size: 0.72rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--cc-radius-pill);
+  text-transform: uppercase;
+}
+
+.badge-status-sold {
+  background-color: #FEECEB;
+  color: #C02626;
+  border: 1px solid #FCD4D2;
+  font-weight: 700;
+  font-size: 0.72rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--cc-radius-pill);
+  text-transform: uppercase;
+}
+
+/* ==========================================================================
+   2. PARTS & ACCESSORIES E-COMMERCE STYLING
+   ========================================================================== */
+.part-card {
+  background-color: var(--cc-surface);
+  border: 1px solid var(--cc-border);
+  border-radius: var(--cc-radius-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-shadow: var(--cc-shadow-sm);
+  transition: var(--cc-transition);
+}
+
+.part-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--cc-shadow-lg);
+}
+
+.part-img-wrap {
+  height: 180px;
+  background-color: #F8F8F8;
+  position: relative;
+  overflow: hidden;
+}
+
+.part-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.part-card:hover .part-img-wrap img {
+  transform: scale(1.05);
+}
+
+.sku-tag {
+  font-family: var(--cc-font-mono);
+  font-size: 0.75rem;
+  color: var(--cc-text-secondary);
+}
+
+.stock-indicator-in {
+  color: #1F7A18;
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.stock-indicator-low {
+  color: #C27803;
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.stock-indicator-out {
+  color: #C02626;
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* Category Filter Pills */
+.category-pill {
+  background-color: var(--cc-surface);
+  border: 1px solid var(--cc-border);
+  color: var(--cc-text-primary);
+  border-radius: var(--cc-radius-pill);
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: var(--cc-transition);
+  box-shadow: var(--cc-shadow-sm);
+}
+
+.category-pill:hover {
+  background-color: var(--cc-base-bg);
+  color: #000000;
+}
+
+.category-pill.active {
+  background-color: var(--cc-contrast-panel);
+  color: #FFFFFF !important;
+  border-color: var(--cc-contrast-panel);
+}
+
+.category-pill.active .badge {
+  background-color: var(--cc-accent) !important;
+  color: var(--cc-contrast-panel) !important;
+}
+
+/* Sticky Cart Sidebar */
+.sticky-cart-sidebar {
+  position: sticky;
+  top: 85px;
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
+}
+
+/* ==========================================================================
+   3. SERVICE APPOINTMENTS & BAY BOARD
+   ========================================================================== */
+.service-ticket {
+  background-color: var(--cc-surface);
+  border: 1px solid var(--cc-border);
+  border-radius: var(--cc-radius-sm);
+  padding: 0.85rem;
+  position: relative;
+  transition: var(--cc-transition);
+  border-left-width: 4px;
+}
+
+.service-ticket:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--cc-shadow-md);
+}
+
+.ticket-scheduled {
+  border-left-color: var(--cc-contrast-panel) !important;
+}
+
+.ticket-in-progress {
+  border-left-color: #9ab818 !important;
+  background-color: #FAFAF8;
+}
+
+.ticket-completed {
+  border-left-color: #1F7A18 !important;
+}
+
+.ticket-cancelled {
+  border-left-color: #C02626 !important;
+  opacity: 0.6;
+}
+
+/* Bay Board Grid */
+.bay-board-container {
+  background-color: var(--cc-surface);
+  border: 1px solid var(--cc-border);
+  border-radius: var(--cc-radius-md);
+  box-shadow: var(--cc-shadow-md);
+  overflow: hidden;
+}
+
+.bay-header-cell {
+  background-color: var(--cc-contrast-panel);
+  color: #FFFFFF;
+  padding: 0.9rem 0.75rem;
+  text-align: center;
+  border-bottom: 2px solid var(--cc-contrast-dark);
+}
+
+.bay-header-cell strong {
+  color: #FFFFFF;
+}
+
+.time-slot-label {
+  font-family: var(--cc-font-mono);
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--cc-text-primary);
+  background-color: #F8F8F6;
+  padding: 0.75rem 0.5rem;
+  text-align: center;
+  border-right: 1px solid var(--cc-border);
+  border-bottom: 1px solid var(--cc-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bay-slot-cell {
+  background-color: var(--cc-surface);
+  border-right: 1px solid var(--cc-border);
+  border-bottom: 1px solid var(--cc-border);
+  padding: 0.6rem;
+  min-height: 110px;
+  position: relative;
+}
+
+.bay-slot-cell.slot-empty {
+  background-color: #FAFAF8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.slot-empty-badge {
+  color: var(--cc-text-secondary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  border: 1px dashed var(--cc-border);
+  padding: 0.25rem 0.55rem;
+  border-radius: var(--cc-radius-pill);
+}
+
+/* ==========================================================================
+   FORMS & INPUTS
+   ========================================================================== */
+.form-control, .form-select {
+  background-color: var(--cc-surface) !important;
+  border: 1px solid var(--cc-border) !important;
+  color: var(--cc-text-primary) !important;
+  border-radius: var(--cc-radius-sm);
+  padding: 0.6rem 0.9rem;
+  font-size: 0.9rem;
+  transition: var(--cc-transition);
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--cc-contrast-panel) !important;
+  box-shadow: 0 0 0 3px rgba(22, 22, 22, 0.1) !important;
+}
+
+.form-control::placeholder {
+  color: var(--cc-text-secondary);
+}
+
+.form-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--cc-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.35rem;
+}
+
+.form-check-input {
+  background-color: var(--cc-surface);
+  border: 1px solid var(--cc-border);
+}
+
+.form-check-input:checked {
+  background-color: var(--cc-contrast-panel);
+  border-color: var(--cc-contrast-panel);
+}
+
+/* ==========================================================================
+   TABLES
+   ========================================================================== */
+.table-custom {
+  color: var(--cc-text-primary);
+  border-color: var(--cc-border);
+  margin-bottom: 0;
+}
+
+.table-custom th {
+  background-color: #FAFAF8;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--cc-text-secondary);
+  font-weight: 700;
+  border-bottom: 1px solid var(--cc-border);
+  padding: 0.85rem;
+}
+
+.table-custom td {
+  padding: 0.85rem;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--cc-border);
+  background-color: var(--cc-surface);
+}
+
+.table-custom tr:hover td {
+  background-color: #FAFAF8;
+}
+
+/* ==========================================================================
+   MODALS, TOASTS & ALERTS
+   ========================================================================== */
+.modal-content {
+  background-color: var(--cc-surface);
+  border: 1px solid var(--cc-border);
+  border-radius: var(--cc-radius-lg);
+  box-shadow: var(--cc-shadow-lg);
+  color: var(--cc-text-primary);
+}
+
+.modal-header {
+  border-bottom: 1px solid var(--cc-border);
+  background-color: #FAFAF8;
+  border-top-left-radius: var(--cc-radius-lg);
+  border-top-right-radius: var(--cc-radius-lg);
+}
+
+.modal-footer {
+  border-top: 1px solid var(--cc-border);
+  background-color: #FAFAF8;
+  border-bottom-left-radius: var(--cc-radius-lg);
+  border-bottom-right-radius: var(--cc-radius-lg);
+}
+
+.alert {
+  border-radius: var(--cc-radius-md);
+  border: 1px solid transparent;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.alert-success {
+  background-color: #EBFEE7;
+  border-color: #D2F7CD;
+  color: #1F7A18;
+}
+
+.alert-warning {
+  background-color: #FFF8E6;
+  border-color: #FFE9B3;
+  color: #9C6C00;
+}
+
+.alert-danger {
+  background-color: #FEECEB;
+  border-color: #FCD4D2;
+  color: #C02626;
+}
+
+.alert-info {
+  background-color: #F0F0EE;
+  border-color: #E5E5E3;
+  color: var(--cc-text-primary);
+}
+
+/* ==========================================================================
+   PAGINATION
+   ========================================================================== */
+.page-link {
+  background-color: var(--cc-surface);
+  border-color: var(--cc-border);
+  color: var(--cc-text-primary);
+  font-weight: 600;
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--cc-radius-sm);
+  margin: 0 2px;
+}
+
+.page-link:hover {
+  background-color: var(--cc-base-bg);
+  border-color: #d1d1cf;
+  color: #000000;
+}
+
+.page-item.active .page-link {
+  background-color: var(--cc-contrast-panel);
+  border-color: var(--cc-contrast-panel);
+  color: var(--cc-accent);
+  font-weight: 800;
+}
+
+/* ==========================================================================
+   FOOTER
+   ========================================================================== */
+.cc-footer {
+  background-color: var(--cc-contrast-panel);
+  border-top: 1px solid var(--cc-contrast-dark);
+  padding: 3rem 0 1.5rem 0;
+  color: var(--cc-text-secondary);
+  font-size: 0.85rem;
+}
+
+.cc-footer h6 {
+  color: #FFFFFF;
+}
+
+.cc-footer a {
+  color: var(--cc-text-secondary);
+}
+
+.cc-footer a:hover {
+  color: var(--cc-accent);
+}
+
+/* Badges */
+.badge.bg-dark {
+  background-color: var(--cc-contrast-panel) !important;
+  color: #FFFFFF !important;
+}
+
+.badge.bg-warning, .badge.bg-accent {
+  background-color: var(--cc-accent) !important;
+  color: var(--cc-contrast-panel) !important;
+}
+
+.badge.bg-secondary {
+  background-color: var(--cc-base-bg) !important;
+  color: var(--cc-text-primary) !important;
+  border: 1px solid var(--cc-border);
+}
+
+/* Responsive tweaks */
+@media (max-width: 991.98px) {
+  .bay-board-container {
+    overflow-x: auto;
+  }
+  .bay-board-table {
+    min-width: 800px;
+  }
+}

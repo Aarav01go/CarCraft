@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }} | CarCraft Showroom{% endblock %}
+
+{% block content %}
+<div class="container py-3" style="max-width: 900px;">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-secondary">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:vehicle_list' %}" class="text-secondary">Inventory</a></li>
+            <li class="breadcrumb-item active text-dark fw-bold">{{ page_title }}</li>
+        </ol>
+    </nav>
+
+    <div class="cc-card p-4 p-md-5">
+        <div class="d-flex align-items-center gap-3 mb-4 border-bottom border-subtle pb-3">
+            <div class="brand-icon-wrap" style="width: 44px; height: 44px;">
+                <i class="bi bi-car-front-fill fs-5"></i>
+            </div>
+            <div>
+                <h3 class="text-dark mb-0">{{ page_title }}</h3>
+                <span class="text-secondary small">Enter official vehicle specifications and showroom media</span>
+            </div>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger mb-4">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <!-- Section 1: Core VIN & Identification -->
+            <h5 class="text-dark mb-3">1. Identification & Model</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form.vin.id_for_label }}">17-Digit VIN Number *</label>
+                    {{ form.vin }}
+                    {% if form.vin.errors %}<div class="text-danger small mt-1">{{ form.vin.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form.year.id_for_label }}">Model Year *</label>
+                    {{ form.year }}
+                    {% if form.year.errors %}<div class="text-danger small mt-1">{{ form.year.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.make.id_for_label }}">Make / Manufacturer *</label>
+                    {{ form.make }}
+                    {% if form.make.errors %}<div class="text-danger small mt-1">{{ form.make.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.model.id_for_label }}">Model *</label>
+                    {{ form.model }}
+                    {% if form.model.errors %}<div class="text-danger small mt-1">{{ form.model.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.trim.id_for_label }}">Trim / Edition</label>
+                    {{ form.trim }}
+                    {% if form.trim.errors %}<div class="text-danger small mt-1">{{ form.trim.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+
+            <!-- Section 2: Showroom Pricing & Status -->
+            <h5 class="text-dark mb-3">2. Pricing, Type & Status</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <label class="form-label" for="{{ form.price.id_for_label }}">Showroom Price (&#8377;) *</label>
+                    {{ form.price }}
+                    {% if form.price.errors %}<div class="text-danger small mt-1">{{ form.price.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="{{ form.odometer.id_for_label }}">Odometer (km) *</label>
+                    {{ form.odometer }}
+                    {% if form.odometer.errors %}<div class="text-danger small mt-1">{{ form.odometer.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="{{ form.type.id_for_label }}">Body Type *</label>
+                    {{ form.type }}
+                    {% if form.type.errors %}<div class="text-danger small mt-1">{{ form.type.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="{{ form.status.id_for_label }}">Status *</label>
+                    {{ form.status }}
+                    {% if form.status.errors %}<div class="text-danger small mt-1">{{ form.status.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+
+            <!-- Section 3: Technical Specs & Powertrain -->
+            <h5 class="text-dark mb-3">3. Technical Specifications</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.fuel_type.id_for_label }}">Powertrain / Fuel</label>
+                    {{ form.fuel_type }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.transmission.id_for_label }}">Transmission</label>
+                    {{ form.transmission }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.drivetrain.id_for_label }}">Drivetrain</label>
+                    {{ form.drivetrain }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form.engine.id_for_label }}">Engine Description</label>
+                    {{ form.engine }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form.horsepower.id_for_label }}">Horsepower (HP)</label>
+                    {{ form.horsepower }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form.exterior_color.id_for_label }}">Exterior Paint</label>
+                    {{ form.exterior_color }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form.interior_color.id_for_label }}">Interior Trim</label>
+                    {{ form.interior_color }}
+                </div>
+            </div>
+
+            <!-- Section 4: Imagery & Description -->
+            <h5 class="text-dark mb-3">4. Media & Features</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-8">
+                    <label class="form-label" for="{{ form.primary_image_url.id_for_label }}">High-Res Primary Photo URL</label>
+                    {{ form.primary_image_url }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.image.id_for_label }}">Or Upload Local File</label>
+                    {{ form.image }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="{{ form.features.id_for_label }}">Key Highlights (Comma Separated)</label>
+                    {{ form.features }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="{{ form.description.id_for_label }}">Vehicle Description</label>
+                    {{ form.description }}
+                </div>
+                <div class="col-12">
+                    <div class="form-check form-switch p-3 bg-light rounded-3 border border-subtle">
+                        {{ form.featured }}
+                        <label class="form-check-label text-dark ms-2 fw-bold" for="{{ form.featured.id_for_label }}">
+                            Spotlight on Command Center
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top border-subtle">
+                <a href="{% url 'inventory:vehicle_list' %}" class="btn btn-workshop">
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-apex px-4">
+                    {{ action_btn }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

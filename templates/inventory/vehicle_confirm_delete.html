@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Vehicle | CarCraft{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 550px;">
+    <div class="cc-card p-4 p-md-5 text-center">
+        <div class="brand-icon-wrap bg-light mx-auto mb-3" style="width: 50px; height: 50px;">
+            <i class="bi bi-trash fs-4 text-danger"></i>
+        </div>
+
+        <h3 class="text-dark mb-2">Delete Vehicle Record?</h3>
+        <p class="text-secondary small mb-4">
+            Are you sure you want to delete <strong>{{ object.title }}</strong> (VIN: <code>{{ object.vin }}</code>)?
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="d-flex justify-content-center gap-2">
+                <a href="{{ object.get_absolute_url }}" class="btn btn-workshop">
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-dark-panel px-4 text-danger">
+                    Delete Vehicle
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

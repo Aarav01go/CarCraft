@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Parts & Accessories Catalog | CarCraft{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-4">
+    <!-- Header & Action Strip -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <h2 class="mb-0 text-dark">Parts & Accessories Catalog</h2>
+                <span class="badge bg-dark font-monospace text-white">{{ total_parts_count }} SKUs</span>
+            </div>
+            <span class="text-secondary small">OEM performance hardware, braking kits, aero, exhausts & EV charging equipment</span>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'store:order_history' %}" class="btn btn-workshop btn-sm">
+                <i class="bi bi-receipt"></i> Orders
+            </a>
+            <a href="{% url 'store:part_add' %}" class="btn btn-workshop btn-sm">
+                <i class="bi bi-plus-lg"></i> Add Part
+            </a>
+            <a href="{% url 'store:cart_detail' %}" class="btn btn-apex btn-sm">
+                <i class="bi bi-bag"></i> Cart ({{ cart|length }})
+            </a>
+        </div>
+    </div>
+
+    <!-- Category Filter Bar -->
+    <div class="d-flex gap-2 overflow-x-auto pb-3 mb-4">
+        <a href="{% url 'store:catalog' %}" class="category-pill text-decoration-none {% if not selected_category %}active{% endif %}">
+            <i class="bi bi-grid-fill"></i>
+            <span>All Categories</span>
+            <span class="badge bg-secondary">{{ total_parts_count }}</span>
+        </a>
+        {% for cat in categories %}
+        <a href="{% url 'store:catalog' %}?category={{ cat.slug }}" class="category-pill text-decoration-none {% if selected_category.slug == cat.slug %}active{% endif %}">
+            <i class="bi {{ cat.icon }}"></i>
+            <span>{{ cat.name }}</span>
+            <span class="badge bg-secondary">{{ cat.parts_count }}</span>
+        </a>
+        {% endfor %}
+    </div>
+
+    <div class="row g-4">
+        <!-- Main Catalog Column -->
+        <div class="col-lg-9">
+            <!-- Search & Filters -->
+            <div class="cc-card p-3 mb-4">
+                <form method="get" class="row g-2 align-items-center">
+                    {% if selected_category %}
+                        <input type="hidden" name="category" value="{{ selected_category.slug }}">
+                    {% endif %}
+                    <div class="col-md-5">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white border-0 text-secondary"><i class="bi bi-search"></i></span>
+                            <input type="text" name="q" value="{{ request.GET.q|default:'' }}" class="form-control" placeholder="Search by name, SKU, brand, or specs...">
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="form-check form-switch pt-1">
+                            <input class="form-check-input" type="checkbox" name="in_stock" id="inStockCheck" value="1" {% if request.GET.in_stock %}checked{% endif %} onchange="this.form.submit()">
+                            <label class="form-check-label text-dark small fw-bold" for="inStockCheck">In-Stock Only</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <select name="sort" class="form-select form-select-sm" onchange="this.form.submit()">
+                            <option value="-featured" {% if request.GET.sort == '-featured' %}selected{% endif %}>Featured Highlights</option>
+                            <option value="price" {% if request.GET.sort == 'price' %}selected{% endif %}>Price: Low to High</option>
+                            <option value="-price" {% if request.GET.sort == '-price' %}selected{% endif %}>Price: High to Low</option>
+                            <option value="name" {% if request.GET.sort == 'name' %}selected{% endif %}>Alphabetical (A-Z)</option>
+                            <option value="-stock" {% if request.GET.sort == '-stock' %}selected{% endif %}>Highest Stock</option>
+                        </select>
+                    </div>
+                    <div class="col-md-1 d-flex">
+                        <button type="submit" class="btn btn-dark-panel btn-sm w-100"><i class="bi bi-search"></i></button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Parts Grid -->
+            <div class="row g-4 mb-4">
+                {% for part in parts %}
+                <div class="col-xl-4 col-md-6">
+                    <div class="part-card">
+                        <!-- Image & Category Tag -->
+                        <div class="part-img-wrap">
+                            <img src="{{ part.display_image }}" alt="{{ part.name }}" loading="lazy">
+                            <span class="position-absolute top-0 start-0 m-2 badge bg-white text-dark border border-subtle small">
+                                {{ part.category.name|default:'General' }}
+                            </span>
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="p-3 d-flex flex-column flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="sku-tag">SKU: {{ part.sku }}</span>
+                                {% if part.stock > 5 %}
+                                    <span class="stock-indicator-in"><i class="bi bi-check2"></i> In Stock ({{ part.stock }})</span>
+                                {% elif part.stock > 0 %}
+                                    <span class="stock-indicator-low"><i class="bi bi-exclamation"></i> Low Stock ({{ part.stock }})</span>
+                                {% else %}
+                                    <span class="stock-indicator-out"><i class="bi bi-x"></i> Out of Stock</span>
+                                {% endif %}
+                            </div>
+
+                            <h5 class="mb-1 text-truncate">
+                                <a href="{{ part.get_absolute_url }}" class="text-dark text-decoration-none">
+                                    {{ part.name }}
+                                </a>
+                            </h5>
+                            <div class="text-secondary small mb-2">{{ part.brand }}</div>
+
+                            <p class="text-muted small mb-3 flex-grow-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                {{ part.description }}
+                            </p>
+
+                            <!-- Price & Add to Cart -->
+                            <div class="mt-auto pt-3 border-top border-subtle d-flex justify-content-between align-items-center">
+                                 <div class="text-dark fw-bold fs-5 font-monospace">
+                                     {{ part.price|inr }}
+                                 </div>
+
+                                 <div class="d-flex gap-1">
+                                     <a href="{{ part.get_absolute_url }}" class="btn btn-workshop btn-sm py-1 px-2" title="View Specs">
+                                         <i class="bi bi-info-circle"></i>
+                                     </a>
+                                     {% if part.is_in_stock %}
+                                     <form method="post" action="{% url 'store:cart_add' part.id %}" class="ajax-add-to-cart-form d-inline">
+                                         {% csrf_token %}
+                                         <input type="hidden" name="quantity" value="1">
+                                         <button type="submit" class="btn btn-apex btn-sm py-1 px-3">
+                                             <i class="bi bi-bag-plus"></i> Add
+                                         </button>
+                                     </form>
+                                     {% else %}
+                                     <button class="btn btn-workshop btn-sm py-1 px-3 disabled" disabled>Sold Out</button>
+                                     {% endif %}
+                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-5">
+                    <div class="cc-card p-5">
+                        <i class="bi bi-box-seam fs-1 text-muted mb-3 d-block"></i>
+                        <h4 class="text-dark">No Parts Found</h4>
+                        <p class="text-secondary small mb-4">No catalog items match your search or filter selection.</p>
+                        <a href="{% url 'store:catalog' %}" class="btn btn-workshop btn-sm">Clear Filters</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Parts pagination">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">&laquo;</a></li>
+                    {% endif %}
+                    {% for num in paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">&raquo;</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+
+        <!-- Sticky Cart Sidebar -->
+        <div class="col-lg-3 d-none d-lg-block">
+            <div class="cc-card p-4 sticky-cart-sidebar">
+                <div class="d-flex justify-content-between align-items-center border-bottom border-subtle pb-2 mb-3">
+                    <h5 class="mb-0 text-dark">Active Cart</h5>
+                    <span class="badge bg-warning text-dark font-monospace cart-count-badge">{{ cart|length }} items</span>
+                </div>
+
+                {% if cart|length > 0 %}
+                    <div class="d-flex flex-column gap-2 mb-3">
+                        {% for item in cart %}
+                        <div class="p-2 bg-light rounded-3 border border-subtle small">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <strong class="text-dark text-truncate" style="max-width: 140px;">{{ item.name }}</strong>
+                                <span class="text-dark font-monospace fw-bold">{{ item.total_price|inr }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-1 text-secondary">
+                                <span>Qty: {{ item.quantity }}</span>
+                                <form method="post" action="{% url 'store:cart_remove' item.part.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-link text-danger p-0 text-decoration-none small">
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="border-top border-subtle pt-3 mb-3 small">
+                        <div class="d-flex justify-content-between text-secondary mb-1">
+                            <span>Subtotal:</span>
+                            <span class="text-dark font-monospace">{{ cart.get_subtotal|inr }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between text-secondary mb-1">
+                            <span>GST (18%):</span>
+                            <span class="text-dark font-monospace">{{ cart.get_tax|inr }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between text-secondary mb-2">
+                            <span>Shipping:</span>
+                            <span class="font-monospace {% if cart.get_shipping == 0 %}text-success fw-bold{% else %}text-dark{% endif %}">
+                                {% if cart.get_shipping == 0 %}FREE{% else %}{{ cart.get_shipping|inr }}{% endif %}
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between text-dark fw-bold fs-6 pt-2 border-top border-subtle">
+                            <span>Total:</span>
+                            <span class="text-dark font-monospace">{{ cart.get_total_price|inr }}</span>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'store:checkout' %}" class="btn btn-apex btn-sm py-2">
+                            Checkout Now
+                        </a>
+                        <a href="{% url 'store:cart_detail' %}" class="btn btn-workshop btn-sm">
+                            Manage Full Cart
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4 text-secondary small">
+                        <i class="bi bi-bag-x fs-2 text-muted mb-2 d-block"></i>
+                        Your parts cart is empty. Click "Add" on any item to build your work order.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

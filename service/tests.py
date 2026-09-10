@@ -1,0 +1,65 @@
+import datetime
+from decimal import Decimal
+from django.test import TestCase, Client
+from django.urls import reverse
+from django.utils import timezone
+from .models import ServiceBay, Appointment
+
+
+class ServiceAppointmentTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.bay1 = ServiceBay.objects.create(
+            bay_number=1,
+            name='Bay 1 - Dyno & Diagnostics',
+            assigned_technician='Rameshwar Patil',
+            is_active=True
+        )
+        self.bay2 = ServiceBay.objects.create(
+            bay_number=2,
+            name='Bay 2 - Alignment & Suspension',
+            assigned_technician='Arjun Nair',
+            is_active=True
+        )
+
+    def test_booking_auto_assigns_available_bay(self):
+        test_date = timezone.now().date() + datetime.timedelta(days=1)
+        booking_url = reverse('service:book_appointment')
+
+        post_data = {
+            'customer_name': 'Aarav Singhania',
+            'customer_email': 'aarav.singhania@apexmotors.in',
+            'customer_phone': '+91 98201 55500',
+            'vehicle_description': '2024 Tata Nexon EV Empowered Plus',
+            'service_type': 'brake_performance',
+            'date': test_date.strftime('%Y-%m-%d'),
+            'time_slot': '08:00',
+            'notes': 'High performance ceramic brake pads check requested.'
+        }
+
+        # First booking -> should get Bay 1
+        response = self.client.post(booking_url, post_data, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Appointment.objects.count(), 1)
+        appt1 = Appointment.objects.first()
+        self.assertEqual(appt1.assigned_bay, self.bay1)
+
+        # Second booking for same slot -> should get Bay 2
+        post_data['customer_name'] = 'Second Customer'
+        response2 = self.client.post(booking_url, post_data, follow=True)
+        self.assertEqual(response2.status_code, 200)
+        self.assertEqual(Appointment.objects.count(), 2)
+        appt2 = Appointment.objects.latest('id')
+        self.assertEqual(appt2.assigned_bay, self.bay2)
+
+        # Third booking for same slot -> All 2 bays are full -> Should show conflict error
+        post_data['customer_name'] = 'Third Customer'
+        response3 = self.client.post(booking_url, post_data)
+        self.assertEqual(response3.status_code, 200)
+        self.assertContains(response3, 'Workshop Bay Capacity Reached')
+
+    def test_bay_board_view(self):
+        response = self.client.get(reverse('service:bay_board'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Bay 1 - Dyno &amp; Diagnostics')
+        self.assertContains(response, 'Bay 2 - Alignment &amp; Suspension')

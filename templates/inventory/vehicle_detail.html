@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}{{ vehicle.title }} | CarCraft Inventory{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-4">
+    <!-- Breadcrumb & Top Bar -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-secondary">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'inventory:vehicle_list' %}" class="text-secondary">Inventory</a></li>
+                <li class="breadcrumb-item active text-dark fw-bold" aria-current="page">{{ vehicle.year }} {{ vehicle.make }} {{ vehicle.model }}</li>
+            </ol>
+        </nav>
+        
+        <div class="d-flex gap-2">
+            <a href="{% url 'inventory:vehicle_edit' vehicle.id %}" class="btn btn-workshop btn-sm">
+                <i class="bi bi-pencil"></i> Edit Details
+            </a>
+            <a href="{% url 'inventory:vehicle_delete' vehicle.id %}" class="btn btn-workshop btn-sm text-danger">
+                <i class="bi bi-trash"></i> Delete
+            </a>
+        </div>
+    </div>
+
+    <!-- VIN Plate Banner (Clean Minimalist Design) -->
+    <div class="cc-card p-3 mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center w-100 gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="brand-icon-wrap">
+                    <i class="bi bi-qr-code"></i>
+                </div>
+                <div>
+                    <div class="text-secondary small text-uppercase font-monospace">VEHICLE VIN REGISTRATION</div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fs-5 font-monospace text-dark fw-bold">{{ vehicle.vin }}</span>
+                        <button class="btn btn-workshop btn-sm py-0 px-2" onclick="navigator.clipboard.writeText('{{ vehicle.vin }}'); alert('VIN Copied: {{ vehicle.vin }}');" title="Copy VIN">
+                            <i class="bi bi-clipboard"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge {{ vehicle.status_badge_class }} fs-6 px-3 py-2">
+                    {{ vehicle.get_status_display }}
+                </span>
+                
+                <div class="btn-group">
+                    <button type="button" class="btn btn-workshop btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                        Change Status
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-3">
+                        <li>
+                            <form method="post" action="{% url 'inventory:quick_status' vehicle.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="available">
+                                <button type="submit" class="dropdown-item text-success"><i class="bi bi-check-circle me-2"></i>Available</button>
+                            </form>
+                        </li>
+                        <li>
+                            <form method="post" action="{% url 'inventory:quick_status' vehicle.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="pending">
+                                <button type="submit" class="dropdown-item text-warning"><i class="bi bi-clock-history me-2"></i>Pending Sale</button>
+                            </form>
+                        </li>
+                        <li>
+                            <form method="post" action="{% url 'inventory:quick_status' vehicle.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="sold">
+                                <button type="submit" class="dropdown-item text-danger"><i class="bi bi-bag-check me-2"></i>Sold</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Detail Grid -->
+    <div class="row g-4 mb-5">
+        <!-- Photo Gallery & Showcase -->
+        <div class="col-lg-7">
+            <div class="cc-card p-3 mb-4">
+                <div class="position-relative rounded-3 overflow-hidden bg-light mb-3" style="min-height: 380px; max-height: 480px;">
+                    <img id="mainGalleryImage" src="{{ vehicle.display_image }}" alt="{{ vehicle.title }}" class="img-fluid w-100 h-100 object-fit-cover">
+                    <span class="vehicle-type-tag">{{ vehicle.type }}</span>
+                </div>
+
+                <!-- Gallery Thumbnails -->
+                <div class="d-flex gap-2 overflow-x-auto pb-2">
+                    <button type="button" class="btn p-0 border border-dark gallery-thumb-btn active" data-img-src="{{ vehicle.display_image }}" style="width: 80px; height: 60px; flex-shrink: 0; overflow: hidden; border-radius: var(--cc-radius-sm);">
+                        <img src="{{ vehicle.display_image }}" alt="Primary Photo" class="w-100 h-100 object-fit-cover">
+                    </button>
+                    {% for img in gallery_images %}
+                    <button type="button" class="btn p-0 border border-secondary gallery-thumb-btn" data-img-src="{{ img.display_url }}" style="width: 80px; height: 60px; flex-shrink: 0; overflow: hidden; border-radius: var(--cc-radius-sm);">
+                        <img src="{{ img.display_url }}" alt="{{ img.caption }}" class="w-100 h-100 object-fit-cover">
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Vehicle Description -->
+            <div class="cc-card p-4">
+                <h4 class="text-dark mb-3">Vehicle Overview & Provenance</h4>
+                <p class="text-secondary lh-lg mb-4">
+                    {{ vehicle.description|default:"No extended description logged for this vehicle." }}
+                </p>
+
+                {% if vehicle.feature_list %}
+                <h5 class="text-dark mb-3">Equipped Packages & Options</h5>
+                <div class="row g-2">
+                    {% for feat in vehicle.feature_list %}
+                    <div class="col-md-6">
+                        <div class="p-2 rounded-3 bg-light border border-subtle small text-dark d-flex align-items-center gap-2">
+                            <i class="bi bi-check2 text-dark fs-6 fw-bold"></i>
+                            <span>{{ feat }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Specifications & Actions Panel -->
+        <div class="col-lg-5">
+            <!-- Price Card (Contrast Panel) -->
+            <div class="contrast-panel p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-baseline mb-2">
+                    <span class="text-secondary small text-uppercase">Showroom Price</span>
+                    <span class="badge bg-dark border border-secondary font-monospace text-white">#CC-{{ vehicle.id }}</span>
+                </div>
+                <div class="display-6 fw-bold text-accent font-monospace mb-3">
+                    {{ vehicle.price|inr }}
+                </div>
+
+                <div class="d-grid gap-2 mb-3">
+                    <a href="{% url 'service:book_appointment' %}?vehicle={{ vehicle.title|urlencode }}&vin={{ vehicle.vin }}" class="btn btn-apex py-2">
+                        <i class="bi bi-tools"></i> Book Workshop Service For This Car
+                    </a>
+                    
+                    <a href="{% url 'inventory:vehicle_edit' vehicle.id %}" class="btn btn-workshop">
+                        <i class="bi bi-pencil"></i> Edit Inventory Record
+                    </a>
+                </div>
+
+                <div class="small text-secondary text-center">
+                    <i class="bi bi-shield-check text-accent me-1"></i> Clean Title Guarantee & Multi-Point Inspection Included
+                </div>
+            </div>
+
+            <!-- Technical Specification Table -->
+            <div class="cc-card p-4">
+                <h5 class="text-dark mb-3">Technical Specifications</h5>
+                
+                <table class="table table-custom small">
+                    <tbody>
+                        <tr>
+                            <td class="text-secondary">Model Year</td>
+                            <td class="text-dark fw-bold text-end">{{ vehicle.year }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-secondary">Manufacturer</td>
+                            <td class="text-dark fw-bold text-end">{{ vehicle.make }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-secondary">Model & Trim</td>
+                            <td class="text-dark fw-bold text-end">{{ vehicle.model }} {% if vehicle.trim %}({{ vehicle.trim }}){% endif %}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-secondary">Odometer</td>
+                            <td class="text-dark fw-bold text-end font-monospace">{{ vehicle.odometer|indian_number }} km</td>
+                        </tr>
+                        <tr>
+                            <td class="text-secondary">Engine / Powertrain</td>
+                            <td class="text-dark fw-bold text-end">{{ vehicle.engine }}</td>
+                        </tr>
+                        {% if vehicle.horsepower %}
+                        <tr>
+                            <td class="text-secondary">Horsepower</td>
+                            <td class="text-dark fw-bold text-end font-monospace">{{ vehicle.horsepower }} HP</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <td class="text-secondary">Transmission</td>
+                            <td class="text-dark fw-bold text-end">{{ vehicle.transmission }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-secondary">Drivetrain</td>
+                            <td class="text-dark fw-bold text-end">{{ vehicle.drivetrain }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-secondary">Fuel Type</td>
+                            <td class="text-dark fw-bold text-end">{{ vehicle.fuel_type }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-secondary">Exterior Color</td>
+                            <td class="text-dark fw-bold text-end">{{ vehicle.exterior_color }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-secondary">Interior Color</td>
+                            <td class="text-dark fw-bold text-end">{{ vehicle.interior_color }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

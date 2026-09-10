@@ -1,0 +1,321 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Dashboard | CarCraft Modern Automotive Suite{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-4">
+    <!-- Hero Showcase Contrast Panel (#161616) -->
+    <div class="contrast-panel p-4 p-md-5 mb-4 rounded-4 position-relative overflow-hidden">
+        <div class="row align-items-center position-relative z-1">
+            <div class="col-lg-7">
+                <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-dark border border-secondary border-opacity-50 text-white small font-monospace mb-3">
+                    <span class="badge bg-warning text-dark font-monospace py-1 px-2">LIVE</span>
+                    <span>AUTOMOTIVE & EV DEALERSHIP SUITE</span>
+                </div>
+                <h1 class="display-5 fw-bold text-white mb-2 tracking-tight">PRECISION INVENTORY & LIFT OPERATIONS</h1>
+                <p class="lead text-secondary mb-4" style="color: #A0A0A0 !important;">
+                    Unified showroom intelligence, OEM performance parts catalog, and real-time lift bay scheduling engine.
+                </p>
+
+                <!-- Clean Search Bar -->
+                <form method="get" action="{% url 'inventory:vehicle_list' %}" class="row g-2 mb-3">
+                    <div class="col-md-8">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-0 text-secondary"><i class="bi bi-search"></i></span>
+                            <input type="text" name="q" class="form-control border-0 shadow-none ps-0" placeholder="Search by Make, Model, or VIN (e.g. Mahindra, Tata, Creta, City, Baleno)..." style="background-color: #FFFFFF !important; color: #161616 !important;">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-apex w-100">
+                            <i class="bi bi-arrow-right"></i> Search Inventory
+                        </button>
+                    </div>
+                </form>
+
+                <div class="d-flex flex-wrap gap-2 pt-2">
+                    <a href="{% url 'inventory:vehicle_list' %}" class="btn btn-workshop btn-sm">
+                        <i class="bi bi-car-front text-dark"></i> {{ stats.available_vehicles }} Showroom Vehicles
+                    </a>
+                    <a href="{% url 'service:bay_board' %}" class="btn btn-workshop btn-sm">
+                        <i class="bi bi-calendar3-range text-dark"></i> Lift Bay Board
+                    </a>
+                    <a href="{% url 'store:catalog' %}" class="btn btn-workshop btn-sm">
+                        <i class="bi bi-gear-wide text-dark"></i> Performance Catalog ({{ stats.parts_count }} SKUs)
+                    </a>
+                </div>
+            </div>
+            
+            <div class="col-lg-5 d-none d-lg-block text-end">
+                <div class="position-relative d-inline-block">
+                    <img src="https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&w=700&q=80" alt="Showroom Hero" class="img-fluid rounded-4 shadow-lg border border-secondary border-opacity-25" style="max-height: 280px; object-fit: cover;">
+                    <div class="position-absolute bottom-0 start-0 m-3 p-3 bg-dark bg-opacity-95 rounded-3 border border-secondary border-opacity-50 text-start small">
+                        <span class="badge bg-warning text-dark font-monospace">SPOTLIGHT</span>
+                        <div class="fw-bold text-white mt-1">2024 Mahindra XUV700 AX7 L AWD</div>
+                        <div class="text-accent font-monospace fw-bold fs-5">&#8377;26,99,000</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Minimal KPI Metric Tiles (#FFFFFF with soft shadows) -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-tile">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-label">Available Inventory</div>
+                        <div class="stat-value">{{ stats.available_vehicles }} <span class="fs-6 text-muted fw-normal">/ {{ stats.total_vehicles }} units</span></div>
+                        <div class="small text-secondary mt-1">
+                            Valuation: <strong class="text-dark">{{ stats.inventory_value|inr }}</strong>
+                        </div>
+                    </div>
+                    <div class="fs-2 text-dark opacity-75">
+                        <i class="bi bi-car-front-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-tile">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-label">Workshop Lifts Today</div>
+                        <div class="stat-value">{{ stats.today_appointments_count }} <span class="fs-6 text-muted fw-normal">booked</span></div>
+                        <div class="small text-secondary mt-1">
+                            Capacity: <strong class="text-dark">{{ stats.active_bays_count }} Bays Active</strong>
+                        </div>
+                    </div>
+                    <div class="fs-2 text-dark opacity-75">
+                        <i class="bi bi-wrench-adjustable-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-tile">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-label">Parts & Hardware</div>
+                        <div class="stat-value">{{ stats.parts_count }} <span class="fs-6 text-muted fw-normal">SKUs active</span></div>
+                        <div class="small text-secondary mt-1">
+                            OEM Performance & EV Catalog
+                        </div>
+                    </div>
+                    <div class="fs-2 text-dark opacity-75">
+                        <i class="bi bi-box-seam-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-tile stat-dark">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-label text-secondary">Quick Shortcuts</div>
+                        <div class="d-flex flex-column gap-2 mt-2">
+                            <a href="{% url 'inventory:vehicle_add' %}" class="btn btn-apex btn-sm justify-content-start py-1 px-3">
+                                <i class="bi bi-plus-lg"></i> Add Vehicle
+                            </a>
+                            <a href="{% url 'service:book_appointment' %}" class="btn btn-workshop btn-sm justify-content-start py-1 px-3">
+                                <i class="bi bi-calendar-plus text-dark"></i> Book Service Bay
+                            </a>
+                        </div>
+                    </div>
+                    <div class="fs-2 text-secondary opacity-50">
+                        <i class="bi bi-lightning-charge-fill text-accent"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Featured Showroom Section -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="mb-0 text-dark">Showroom Spotlight</h3>
+            <span class="text-muted small">Curated exotic, electric, and performance inventory</span>
+        </div>
+        <a href="{% url 'inventory:vehicle_list' %}" class="btn btn-workshop btn-sm">
+            View All {{ stats.total_vehicles }} Vehicles <i class="bi bi-arrow-right"></i>
+        </a>
+    </div>
+
+    <div class="row g-4 mb-5">
+        {% for vehicle in featured_vehicles %}
+        <div class="col-lg-4 col-md-6">
+            <div class="vehicle-card">
+                <!-- VIN Header Strip -->
+                <div class="vin-plate-header">
+                    <div class="vin-stamp">
+                        <i class="bi bi-qr-code vin-stamp-icon"></i>
+                        <span>VIN: {{ vehicle.vin }}</span>
+                    </div>
+                    <span id="vehicle-badge-{{ vehicle.id }}" class="badge {{ vehicle.status_badge_class }}">
+                        {{ vehicle.get_status_display }}
+                    </span>
+                </div>
+
+                <!-- Image -->
+                <div class="vehicle-img-wrapper">
+                    <img src="{{ vehicle.display_image }}" alt="{{ vehicle.title }}" loading="lazy">
+                    <span class="vehicle-type-tag">{{ vehicle.type }}</span>
+                    <span class="vehicle-price-tag">{{ vehicle.price|inr }}</span>
+                </div>
+
+                <!-- Card Body -->
+                <div class="p-4 d-flex flex-column flex-grow-1">
+                    <h5 class="mb-1">
+                        <a href="{{ vehicle.get_absolute_url }}" class="text-dark text-decoration-none">
+                            {{ vehicle.year }} {{ vehicle.make }} {{ vehicle.model }}
+                        </a>
+                    </h5>
+                    {% if vehicle.trim %}
+                        <div class="text-secondary small fw-bold mb-2">{{ vehicle.trim }}</div>
+                    {% else %}
+                        <div class="text-muted small mb-2">&nbsp;</div>
+                    {% endif %}
+
+                    <!-- Specs Pills -->
+                    <div class="vehicle-spec-pills">
+                        <span class="spec-pill"><i class="bi bi-speedometer2"></i> {{ vehicle.odometer|indian_number }} km</span>
+                        <span class="spec-pill"><i class="bi bi-fuel-pump"></i> {{ vehicle.fuel_type }}</span>
+                        <span class="spec-pill"><i class="bi bi-gear"></i> {{ vehicle.transmission }}</span>
+                        {% if vehicle.horsepower %}
+                            <span class="spec-pill"><i class="bi bi-lightning-charge"></i> {{ vehicle.horsepower }} HP</span>
+                        {% endif %}
+                    </div>
+
+                    <p class="text-muted small mb-3 flex-grow-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                        {{ vehicle.description }}
+                    </p>
+
+                    <!-- Card Actions -->
+                    <div class="border-top border-subtle pt-3 d-flex justify-content-between align-items-center">
+                        <a href="{{ vehicle.get_absolute_url }}" class="btn btn-workshop btn-sm">
+                            <i class="bi bi-eye"></i> Specs Sheet
+                        </a>
+                        
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-workshop btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                                Status
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-3">
+                                <li>
+                                    <button class="dropdown-item quick-vehicle-status-btn text-success" data-vehicle-id="{{ vehicle.id }}" data-status="available">
+                                        <i class="bi bi-check-circle me-1"></i> Available
+                                    </button>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item quick-vehicle-status-btn text-warning" data-vehicle-id="{{ vehicle.id }}" data-status="pending">
+                                        <i class="bi bi-clock-history me-1"></i> Pending Sale
+                                    </button>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item quick-vehicle-status-btn text-danger" data-vehicle-id="{{ vehicle.id }}" data-status="sold">
+                                        <i class="bi bi-bag-check me-1"></i> Mark as Sold
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5 text-muted">
+            <p>No featured vehicles available at this moment.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Split Section: Workshop Today & Parts Spotlight -->
+    <div class="row g-4 mb-4">
+        <!-- Workshop Today Snapshot -->
+        <div class="col-lg-6">
+            <div class="cc-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h4 class="mb-0 text-dark">Workshop Lift Schedule</h4>
+                        <span class="text-secondary small font-monospace">{{ today|date:"l, d-m-Y" }}</span>
+                    </div>
+                    <a href="{% url 'service:bay_board' %}" class="btn btn-workshop btn-sm">
+                        Full Bay Board <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+
+                <div class="d-flex flex-column gap-2 mb-3">
+                    {% for appt in today_appointments|slice:":4" %}
+                    <div class="service-ticket {{ appt.status_ticket_class }} p-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge bg-dark font-monospace text-white me-2">{{ appt.time_slot }}</span>
+                                <strong class="text-dark">{{ appt.vehicle_description }}</strong>
+                                <span class="text-muted small ms-2">({{ appt.customer_name }})</span>
+                            </div>
+                            <span class="badge bg-secondary font-monospace">{{ appt.assigned_bay.name|default:'Unassigned' }}</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-muted text-center py-4">No active service appointments booked for today yet.</div>
+                    {% endfor %}
+                </div>
+
+                <div class="mt-auto pt-3 border-top border-subtle d-flex justify-content-between align-items-center">
+                    <span class="small text-secondary">Auto-allocation active across 4 bays</span>
+                    <a href="{% url 'service:book_appointment' %}" class="btn btn-dark-panel btn-sm">
+                        <i class="bi bi-calendar-plus"></i> Book Service Slot
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Parts Spotlight -->
+        <div class="col-lg-6">
+            <div class="cc-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h4 class="mb-0 text-dark">Parts & Accessories Spotlight</h4>
+                        <span class="text-secondary small">OEM performance hardware & EV chargers</span>
+                    </div>
+                    <a href="{% url 'store:catalog' %}" class="btn btn-workshop btn-sm">
+                        Catalog <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+
+                <div class="row g-3">
+                    {% for part in featured_parts %}
+                    <div class="col-sm-6">
+                        <div class="part-card p-2">
+                            <div class="d-flex gap-2 align-items-center">
+                                <img src="{{ part.display_image }}" alt="{{ part.name }}" class="rounded-3" style="width: 70px; height: 70px; object-fit: cover;">
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <div class="sku-tag">{{ part.sku }}</div>
+                                    <a href="{{ part.get_absolute_url }}" class="text-dark text-decoration-none fw-bold small text-truncate d-block">
+                                        {{ part.name }}
+                                    </a>
+                                    <div class="d-flex justify-content-between align-items-center mt-1">
+                                        <span class="text-dark fw-bold font-monospace">{{ part.price|inr }}</span>
+                                        <form method="post" action="{% url 'store:cart_add' part.id %}" class="ajax-add-to-cart-form d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="quantity" value="1">
+                                            <button type="submit" class="btn btn-apex btn-sm py-0 px-2" title="Quick Add">
+                                                <i class="bi bi-cart-plus"></i> Add
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

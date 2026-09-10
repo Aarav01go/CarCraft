@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Workshop Bay Board | CarCraft{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-4">
+    <!-- Header & Date Navigation -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <h2 class="mb-0 text-dark">Workshop Bay Board</h2>
+                <span class="badge bg-dark font-monospace text-white">{{ active_bays|length }} Lift Bays Active</span>
+            </div>
+            <span class="text-secondary small">Live daily lift assignments, technician workloads & occupancy matrix</span>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+            <!-- Date Navigator -->
+            <div class="btn-group">
+                <a href="?date={{ prev_date|date:'Y-m-d' }}" class="btn btn-workshop btn-sm" title="Previous Day">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+                <a href="?date={{ today|date:'Y-m-d' }}" class="btn btn-workshop btn-sm {% if selected_date == today %}fw-bold text-dark border-dark{% endif %}">
+                    Today ({{ today|date:"d M" }})
+                </a>
+                <a href="?date={{ next_date|date:'Y-m-d' }}" class="btn btn-workshop btn-sm" title="Next Day">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </div>
+
+            <!-- Date Picker Form -->
+            <form method="get" class="d-flex gap-1">
+                <input type="date" name="date" value="{{ selected_date|date:'Y-m-d' }}" class="form-control form-control-sm font-monospace" onchange="this.form.submit()">
+            </form>
+
+            <a href="{% url 'service:book_appointment' %}?date={{ selected_date|date:'Y-m-d' }}" class="btn btn-apex btn-sm">
+                <i class="bi bi-plus-lg"></i> Book Lift Bay
+            </a>
+        </div>
+    </div>
+
+    <!-- Daily Metrics Bar -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-sm-6">
+            <div class="stat-tile">
+                <div class="stat-label">Selected Date</div>
+                <div class="stat-value text-dark fs-4 font-monospace">{{ selected_date|date:"D, d-m-Y" }}</div>
+                <div class="small text-secondary">Operating: 08:00 - 17:30</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6">
+            <div class="stat-tile">
+                <div class="stat-label">Bay Occupancy</div>
+                <div class="stat-value text-dark">{{ stats.occupancy_rate }}% <span class="fs-6 text-muted fw-normal">({{ stats.booked }}/{{ stats.total_slots }} slots)</span></div>
+                <div class="progress mt-2" style="height: 4px; background: #E5E5E3;">
+                    <div class="progress-bar bg-dark" style="width: {{ stats.occupancy_rate }}%;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6">
+            <div class="stat-tile">
+                <div class="stat-label">Lifts Status</div>
+                <div class="stat-value text-dark">{{ stats.completed }} <span class="fs-6 text-muted fw-normal">done / {{ stats.in_progress }} on lift</span></div>
+                <div class="small text-secondary">{{ stats.scheduled }} scheduled remaining</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6">
+            <div class="stat-tile stat-dark">
+                <div class="stat-label text-secondary">Service Shortcuts</div>
+                <div class="d-flex gap-2 mt-2">
+                    <a href="{% url 'service:appointment_list' %}" class="btn btn-workshop btn-sm py-1">
+                        Work Orders
+                    </a>
+                    <a href="{% url 'service:book_appointment' %}" class="btn btn-apex btn-sm py-1">
+                        + New Booking
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bay Board Interactive Matrix Grid -->
+    <div class="bay-board-container mb-5">
+        <div class="table-responsive">
+            <table class="table bay-board-table table-bordered border-subtle mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 140px; background-color: #F8F8F6;" class="text-center text-secondary font-monospace small">
+                            TIME SLOT
+                        </th>
+                        {% for bay in active_bays %}
+                        <th class="bay-header-cell">
+                            <div class="d-flex align-items-center justify-content-center gap-2">
+                                <span class="badge bg-warning text-dark font-monospace fw-bold">BAY #{{ bay.bay_number }}</span>
+                                <strong class="text-white">{{ bay.name }}</strong>
+                            </div>
+                            <div class="text-secondary small font-monospace mt-1">
+                                <i class="bi bi-person-badge text-accent me-1"></i> {{ bay.assigned_technician }}
+                            </div>
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in board_data %}
+                    <tr>
+                        <!-- Time Slot Label -->
+                        <td class="time-slot-label">
+                            <div>
+                                <span class="fw-bold">{{ row.label|slice:":8" }}</span>
+                                <div class="text-secondary small" style="font-size: 0.7rem;">{{ row.label|slice:"9:" }}</div>
+                            </div>
+                        </td>
+
+                        <!-- Bays for this time slot -->
+                        {% for item in row.bays %}
+                        <td class="bay-slot-cell {% if not item.appointment %}slot-empty{% endif %}">
+                            {% if item.appointment %}
+                                <!-- Booked Appointment Ticket -->
+                                <div class="service-ticket {{ item.appointment.status_ticket_class }}">
+                                    <div class="d-flex justify-content-between align-items-start mb-1">
+                                        <span class="badge bg-dark text-white font-monospace small">
+                                            #APT-{{ item.appointment.id }}
+                                        </span>
+                                        <span class="badge bg-light text-dark border border-subtle text-uppercase font-monospace" style="font-size: 0.7rem;">
+                                            {{ item.appointment.get_status_display }}
+                                        </span>
+                                    </div>
+
+                                    <h6 class="text-dark mb-1 fw-bold text-truncate" title="{{ item.appointment.vehicle_description }}">
+                                        <a href="{{ item.appointment.get_absolute_url }}" class="text-dark text-decoration-none">
+                                            {{ item.appointment.vehicle_description }}
+                                        </a>
+                                    </h6>
+                                    <div class="text-secondary small mb-1 fw-semibold text-truncate">
+                                        {{ item.appointment.service_label_short }}
+                                    </div>
+                                    <div class="text-muted small mb-2">
+                                        {{ item.appointment.customer_name }} &bull; {{ item.appointment.customer_phone }}
+                                    </div>
+
+                                    {% if item.appointment.notes %}
+                                    <div class="text-secondary small mb-2 p-1 bg-light rounded text-truncate" style="font-size: 0.75rem;" title="{{ item.appointment.notes }}">
+                                        <i class="bi bi-chat-left-text me-1"></i> {{ item.appointment.notes }}
+                                    </div>
+                                    {% endif %}
+
+                                    <!-- Quick Status Advance Buttons -->
+                                    <div class="d-flex justify-content-between align-items-center pt-2 border-top border-subtle">
+                                        <span class="font-monospace text-dark small fw-bold">{{ item.appointment.estimated_cost|inr }}</span>
+                                        
+                                        <div class="btn-group">
+                                            <a href="{{ item.appointment.get_absolute_url }}" class="btn btn-workshop btn-sm py-0 px-2 small" title="Ticket Details">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-workshop btn-sm py-0 px-2 dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown">
+                                                <span class="visually-hidden">Toggle</span>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg small rounded-3">
+                                                <li>
+                                                    <form method="post" action="{% url 'service:update_status' item.appointment.id %}">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="status" value="in_progress">
+                                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                                        <button type="submit" class="dropdown-item text-dark"><i class="bi bi-play-circle me-1"></i> Start (On Lift)</button>
+                                                    </form>
+                                                </li>
+                                                <li>
+                                                    <form method="post" action="{% url 'service:update_status' item.appointment.id %}">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="status" value="completed">
+                                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                                        <button type="submit" class="dropdown-item text-success"><i class="bi bi-check-circle me-1"></i> Complete Job</button>
+                                                    </form>
+                                                </li>
+                                                <li>
+                                                    <form method="post" action="{% url 'service:update_status' item.appointment.id %}">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="status" value="cancelled">
+                                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                                        <button type="submit" class="dropdown-item text-danger"><i class="bi bi-x-circle me-1"></i> Cancel Booking</button>
+                                                    </form>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <!-- Empty Slot Cell -->
+                                <div class="text-center py-3">
+                                    <span class="slot-empty-badge mb-2 d-inline-block">OPEN</span>
+                                    <div>
+                                        <a href="{% url 'service:book_appointment' %}?date={{ selected_date|date:'Y-m-d' }}&slot={{ row.code }}" class="btn btn-workshop btn-sm py-0 px-2" style="font-size: 0.75rem;">
+                                            + Book
+                                        </a>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
