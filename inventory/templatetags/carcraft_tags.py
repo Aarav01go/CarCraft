@@ -64,33 +64,17 @@ def format_indian_number(value, include_decimals=False):
 
 @register.filter(name='inr')
 def inr_filter(value, show_decimals=False):
-    """
-    Formats value as Indian Rupee string: e.g. ₹24,50,000
-    """
+    """Format value as Indian Rupee string: e.g. ₹24,50,000"""
     if value is None or value == '':
         return '₹0'
     formatted = format_indian_number(value, include_decimals=bool(show_decimals))
     return f"₹{formatted}"
 
 
-@register.filter(name='indian_currency')
-def indian_currency_filter(value, show_decimals=False):
-    """Alias for inr filter"""
-    return inr_filter(value, show_decimals)
-
-
 @register.filter(name='indian_number')
 def indian_number_filter(value):
-    """
-    Formats a number with Indian comma grouping without currency symbol.
-    e.g. 2450000 -> 24,50,000
-    """
+    """Format a number with Indian comma grouping without currency symbol."""
     if value is None or value == '':
         return '0'
     return format_indian_number(value, include_decimals=False)
 
-
-@register.filter(name='indian_intcomma')
-def indian_intcomma_filter(value):
-    """Alias for indian_number filter"""
-    return indian_number_filter(value)

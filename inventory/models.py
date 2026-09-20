@@ -104,14 +104,6 @@ class Vehicle(models.Model):
         return f"{self.year} {self.make} {self.model}{trim_str}"
 
     @property
-    def mileage(self):
-        return self.odometer
-
-    @mileage.setter
-    def mileage(self, value):
-        self.odometer = value
-
-    @property
     def display_image(self):
         if self.image:
             return self.image.url

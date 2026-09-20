@@ -1,5 +1,5 @@
 from django import forms
-from .models import Vehicle, VehicleImage
+from .models import Vehicle
 
 
 class VehicleForm(forms.ModelForm):
