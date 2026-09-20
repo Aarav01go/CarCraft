@@ -1,7 +1,6 @@
 from django.db import models
 from django.urls import reverse
 from django.core.exceptions import ValidationError
-from django.utils import timezone
 
 
 class ServiceBay(models.Model):
@@ -101,14 +100,6 @@ class Appointment(models.Model):
 
     def __str__(self):
         return f"{self.date} {self.time_slot} - {self.customer_name} ({self.get_service_type_display().split('(')[0].strip()})"
-
-    @property
-    def vehicle_mileage(self):
-        return self.vehicle_odometer
-
-    @vehicle_mileage.setter
-    def vehicle_mileage(self, value):
-        self.vehicle_odometer = value
 
     def clean(self):
         super().clean()

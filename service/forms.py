@@ -1,7 +1,7 @@
-from datetime import date
 from django import forms
 from django.utils import timezone
-from .models import Appointment, ServiceBay
+from .models import Appointment
+from .services import get_active_bays, get_available_bays
 
 
 class AppointmentBookingForm(forms.ModelForm):
@@ -37,19 +37,11 @@ class AppointmentBookingForm(forms.ModelForm):
         time_slot = cleaned_data.get('time_slot')
 
         if booking_date and time_slot:
-            # Find active bays
-            active_bays = ServiceBay.objects.filter(is_active=True)
+            active_bays = get_active_bays()
             if not active_bays.exists():
                 raise forms.ValidationError("No service bays are currently active. Please contact the service desk directly.")
 
-            # Find bays already booked for this exact date & slot
-            booked_bay_ids = Appointment.objects.filter(
-                date=booking_date,
-                time_slot=time_slot
-            ).exclude(status='cancelled').values_list('assigned_bay_id', flat=True)
-
-            available_bays = active_bays.exclude(id__in=booked_bay_ids)
-
+            available_bays = get_available_bays(booking_date, time_slot)
             if not available_bays.exists():
                 raise forms.ValidationError(
                     f"⚠️ Workshop Bay Capacity Reached: All {active_bays.count()} service bays are fully booked for "

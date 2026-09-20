@@ -1,14 +1,20 @@
 import datetime
-from decimal import Decimal
-from django.test import TestCase, Client
+from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 from .models import ServiceBay, Appointment
+from .services import (
+    get_active_bays,
+    get_available_bays,
+    get_bay_availability_status,
+    build_bay_board_data,
+    filter_appointments,
+    parse_date_or_default,
+)
 
 
 class ServiceAppointmentTests(TestCase):
     def setUp(self):
-        self.client = Client()
         self.bay1 = ServiceBay.objects.create(
             bay_number=1,
             name='Bay 1 - Dyno & Diagnostics',
@@ -63,3 +69,33 @@ class ServiceAppointmentTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Bay 1 - Dyno &amp; Diagnostics')
         self.assertContains(response, 'Bay 2 - Alignment &amp; Suspension')
+
+    def test_service_layer_and_api(self):
+        test_date = timezone.now().date() + datetime.timedelta(days=2)
+        bays = get_active_bays()
+        self.assertEqual(bays.count(), 2)
+
+        free_bays = get_available_bays(test_date, '08:00')
+        self.assertEqual(free_bays.count(), 2)
+
+        status = get_bay_availability_status(test_date, '08:00')
+        self.assertEqual(status['total_bays'], 2)
+        self.assertEqual(status['available_count'], 2)
+        self.assertFalse(status['is_fully_booked'])
+        self.assertEqual(status['suggested_bay']['id'], self.bay1.id)
+
+        board = build_bay_board_data(test_date)
+        self.assertEqual(len(board['board_data']), len(Appointment.TIME_SLOTS))
+
+        api_url = reverse('service:api_availability') + f"?date={test_date.strftime('%Y-%m-%d')}&slot=08:00"
+        response = self.client.get(api_url)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['available_count'], 2)
+
+        # Test filter_appointments and parse_date_or_default
+        self.assertEqual(parse_date_or_default('invalid-date'), timezone.now().date())
+        self.assertEqual(parse_date_or_default('2026-10-15'), datetime.date(2026, 10, 15))
+        appt_qs = filter_appointments(Appointment.objects.all(), {'q': 'Tata', 'status': 'scheduled'})
+        self.assertEqual(appt_qs.count(), 0)
+

@@ -1,13 +1,18 @@
 import datetime
-from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, View, TemplateView
-from django.urls import reverse_lazy, reverse
+from django.shortcuts import get_object_or_404, redirect
+from django.views.generic import ListView, DetailView, CreateView, View, TemplateView
 from django.contrib import messages
 from django.utils import timezone
 from django.http import JsonResponse
-from django.db.models import Q, Count
-from .models import ServiceBay, Appointment
+from .models import Appointment
 from .forms import AppointmentBookingForm, AppointmentStatusForm
+from .services import (
+    get_active_bays,
+    get_bay_availability_status,
+    build_bay_board_data,
+    parse_date_or_default,
+    filter_appointments,
+)
 
 
 class BookAppointmentView(CreateView):
@@ -17,10 +22,8 @@ class BookAppointmentView(CreateView):
 
     def get_initial(self):
         initial = super().get_initial()
-        # Set default date to today or tomorrow
         initial['date'] = timezone.now().date()
         initial['time_slot'] = '08:00'
-        # Check if pre-filled vehicle details from inventory detail page
         vehicle_param = self.request.GET.get('vehicle')
         vin_param = self.request.GET.get('vin')
         if vehicle_param:
@@ -32,7 +35,7 @@ class BookAppointmentView(CreateView):
     def form_valid(self, form):
         self.object = form.save()
         messages.success(
-            self.request, 
+            self.request,
             f"🎉 Service appointment confirmed for {self.object.customer_name}! "
             f"Assigned to {self.object.assigned_bay.name if self.object.assigned_bay else 'Workshop Bay'} on {self.object.date} at {self.object.get_time_slot_display()}."
         )
@@ -40,7 +43,7 @@ class BookAppointmentView(CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['bays'] = ServiceBay.objects.filter(is_active=True)
+        context['bays'] = get_active_bays()
         context['time_slots'] = Appointment.TIME_SLOTS
         context['service_types'] = Appointment.SERVICE_TYPES
         context['service_costs'] = Appointment.SERVICE_COSTS
@@ -52,60 +55,14 @@ class BayBoardView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        date_str = self.request.GET.get('date')
-        if date_str:
-            try:
-                selected_date = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
-            except ValueError:
-                selected_date = timezone.now().date()
-        else:
-            selected_date = timezone.now().date()
+        selected_date = parse_date_or_default(self.request.GET.get('date'))
 
-        active_bays = list(ServiceBay.objects.filter(is_active=True).order_by('bay_number'))
-        appointments = Appointment.objects.filter(
-            date=selected_date
-        ).exclude(status='cancelled').select_related('assigned_bay')
-
-        # Build 2D matrix: [time_slot][bay_id] = appointment
-        time_slots = Appointment.TIME_SLOTS
-        board_data = []
-
-        total_possible_slots = len(active_bays) * len(time_slots)
-        booked_count = appointments.count()
-        completed_count = appointments.filter(status='completed').count()
-        in_progress_count = appointments.filter(status='in_progress').count()
-        scheduled_count = appointments.filter(status='scheduled').count()
-
-        occupancy_rate = int((booked_count / total_possible_slots * 100)) if total_possible_slots > 0 else 0
-
-        for slot_code, slot_label in time_slots:
-            slot_row = {
-                'code': slot_code,
-                'label': slot_label,
-                'bays': []
-            }
-            for bay in active_bays:
-                appt = next((a for a in appointments if a.time_slot == slot_code and a.assigned_bay_id == bay.id), None)
-                slot_row['bays'].append({
-                    'bay': bay,
-                    'appointment': appt
-                })
-            board_data.append(slot_row)
-
+        board_context = build_bay_board_data(selected_date)
+        context.update(board_context)
         context['selected_date'] = selected_date
         context['prev_date'] = selected_date - datetime.timedelta(days=1)
         context['next_date'] = selected_date + datetime.timedelta(days=1)
         context['today'] = timezone.now().date()
-        context['active_bays'] = active_bays
-        context['board_data'] = board_data
-        context['stats'] = {
-            'booked': booked_count,
-            'completed': completed_count,
-            'in_progress': in_progress_count,
-            'scheduled': scheduled_count,
-            'occupancy_rate': occupancy_rate,
-            'total_slots': total_possible_slots,
-        }
         return context
 
 
@@ -117,34 +74,11 @@ class AppointmentListView(ListView):
 
     def get_queryset(self):
         qs = Appointment.objects.select_related('assigned_bay').all()
-        q = self.request.GET.get('q')
-        status = self.request.GET.get('status')
-        bay_id = self.request.GET.get('bay')
-        date_filter = self.request.GET.get('date')
-
-        if q:
-            qs = qs.filter(
-                Q(customer_name__icontains=q) |
-                Q(customer_phone__icontains=q) |
-                Q(vehicle_description__icontains=q) |
-                Q(vehicle_vin__icontains=q)
-            )
-        if status:
-            qs = qs.filter(status=status)
-        if bay_id:
-            qs = qs.filter(assigned_bay_id=bay_id)
-        if date_filter:
-            try:
-                d = datetime.datetime.strptime(date_filter, '%Y-%m-%d').date()
-                qs = qs.filter(date=d)
-            except ValueError:
-                pass
-
-        return qs.order_by('date', 'time_slot')
+        return filter_appointments(qs, self.request.GET)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['bays'] = ServiceBay.objects.filter(is_active=True)
+        context['bays'] = get_active_bays()
         context['statuses'] = Appointment.STATUS_CHOICES
         context['current_q'] = self.request.GET.get('q', '')
         context['current_status'] = self.request.GET.get('status', '')
@@ -197,33 +131,17 @@ class ApiAvailabilityCheckView(View):
         if not date_str or not slot:
             return JsonResponse({'error': 'Missing date or slot parameter'}, status=400)
 
-        try:
-            check_date = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
-        except ValueError:
+        check_date = parse_date_or_default(date_str, default=False)
+        if not check_date:
             return JsonResponse({'error': 'Invalid date format'}, status=400)
 
-        active_bays = ServiceBay.objects.filter(is_active=True)
-        booked_bay_ids = Appointment.objects.filter(
-            date=check_date,
-            time_slot=slot
-        ).exclude(status='cancelled').values_list('assigned_bay_id', flat=True)
-
-        available_bays = active_bays.exclude(id__in=booked_bay_ids)
-        available_count = available_bays.count()
-        total_bays = active_bays.count()
-
-        first_bay = available_bays.first()
-
+        status_data = get_bay_availability_status(check_date, slot)
         return JsonResponse({
             'date': date_str,
             'slot': slot,
-            'total_bays': total_bays,
-            'available_count': available_count,
-            'is_fully_booked': available_count == 0,
-            'suggested_bay': {
-                'id': first_bay.id,
-                'name': first_bay.name,
-                'technician': first_bay.assigned_technician
-            } if first_bay else None,
-            'message': 'Available' if available_count > 0 else 'All bays fully booked for this time slot'
+            'total_bays': status_data['total_bays'],
+            'available_count': status_data['available_count'],
+            'is_fully_booked': status_data['is_fully_booked'],
+            'suggested_bay': status_data['suggested_bay'],
+            'message': 'Available' if status_data['available_count'] > 0 else 'All bays fully booked for this time slot'
         })
