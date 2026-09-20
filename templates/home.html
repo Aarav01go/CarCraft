@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% load humanize %}
 
 {% block title %}Dashboard | CarCraft Modern Automotive Suite{% endblock %}
 
@@ -148,83 +147,7 @@
     <div class="row g-4 mb-5">
         {% for vehicle in featured_vehicles %}
         <div class="col-lg-4 col-md-6">
-            <div class="vehicle-card">
-                <!-- VIN Header Strip -->
-                <div class="vin-plate-header">
-                    <div class="vin-stamp">
-                        <i class="bi bi-qr-code vin-stamp-icon"></i>
-                        <span>VIN: {{ vehicle.vin }}</span>
-                    </div>
-                    <span id="vehicle-badge-{{ vehicle.id }}" class="badge {{ vehicle.status_badge_class }}">
-                        {{ vehicle.get_status_display }}
-                    </span>
-                </div>
-
-                <!-- Image -->
-                <div class="vehicle-img-wrapper">
-                    <img src="{{ vehicle.display_image }}" alt="{{ vehicle.title }}" loading="lazy">
-                    <span class="vehicle-type-tag">{{ vehicle.type }}</span>
-                    <span class="vehicle-price-tag">{{ vehicle.price|inr }}</span>
-                </div>
-
-                <!-- Card Body -->
-                <div class="p-4 d-flex flex-column flex-grow-1">
-                    <h5 class="mb-1">
-                        <a href="{{ vehicle.get_absolute_url }}" class="text-dark text-decoration-none">
-                            {{ vehicle.year }} {{ vehicle.make }} {{ vehicle.model }}
-                        </a>
-                    </h5>
-                    {% if vehicle.trim %}
-                        <div class="text-secondary small fw-bold mb-2">{{ vehicle.trim }}</div>
-                    {% else %}
-                        <div class="text-muted small mb-2">&nbsp;</div>
-                    {% endif %}
-
-                    <!-- Specs Pills -->
-                    <div class="vehicle-spec-pills">
-                        <span class="spec-pill"><i class="bi bi-speedometer2"></i> {{ vehicle.odometer|indian_number }} km</span>
-                        <span class="spec-pill"><i class="bi bi-fuel-pump"></i> {{ vehicle.fuel_type }}</span>
-                        <span class="spec-pill"><i class="bi bi-gear"></i> {{ vehicle.transmission }}</span>
-                        {% if vehicle.horsepower %}
-                            <span class="spec-pill"><i class="bi bi-lightning-charge"></i> {{ vehicle.horsepower }} HP</span>
-                        {% endif %}
-                    </div>
-
-                    <p class="text-muted small mb-3 flex-grow-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                        {{ vehicle.description }}
-                    </p>
-
-                    <!-- Card Actions -->
-                    <div class="border-top border-subtle pt-3 d-flex justify-content-between align-items-center">
-                        <a href="{{ vehicle.get_absolute_url }}" class="btn btn-workshop btn-sm">
-                            <i class="bi bi-eye"></i> Specs Sheet
-                        </a>
-                        
-                        <div class="btn-group">
-                            <button type="button" class="btn btn-workshop btn-sm dropdown-toggle" data-bs-toggle="dropdown">
-                                Status
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-3">
-                                <li>
-                                    <button class="dropdown-item quick-vehicle-status-btn text-success" data-vehicle-id="{{ vehicle.id }}" data-status="available">
-                                        <i class="bi bi-check-circle me-1"></i> Available
-                                    </button>
-                                </li>
-                                <li>
-                                    <button class="dropdown-item quick-vehicle-status-btn text-warning" data-vehicle-id="{{ vehicle.id }}" data-status="pending">
-                                        <i class="bi bi-clock-history me-1"></i> Pending Sale
-                                    </button>
-                                </li>
-                                <li>
-                                    <button class="dropdown-item quick-vehicle-status-btn text-danger" data-vehicle-id="{{ vehicle.id }}" data-status="sold">
-                                        <i class="bi bi-bag-check me-1"></i> Mark as Sold
-                                    </button>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            {% include 'inventory/includes/vehicle_card.html' with vehicle=vehicle %}
         </div>
         {% empty %}
         <div class="col-12 text-center py-5 text-muted">

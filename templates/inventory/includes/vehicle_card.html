@@ -1,0 +1,74 @@
+<div class="vehicle-card">
+    <div class="vin-plate-header">
+        <div class="vin-stamp">
+            <i class="bi bi-qr-code vin-stamp-icon"></i>
+            <span title="{{ vehicle.vin }}">{{ vehicle.vin|truncatechars:14 }}</span>
+        </div>
+        <span id="vehicle-badge-{{ vehicle.id }}" class="badge {{ vehicle.status_badge_class }}">
+            {{ vehicle.get_status_display }}
+        </span>
+    </div>
+
+    <div class="vehicle-img-wrapper">
+        <img src="{{ vehicle.display_image }}" alt="{{ vehicle.title }}" loading="lazy">
+        <span class="vehicle-type-tag">{{ vehicle.type }}</span>
+        <span class="vehicle-price-tag">{{ vehicle.price|inr }}</span>
+    </div>
+
+    <div class="p-3 d-flex flex-column flex-grow-1">
+        <h5 class="mb-1 text-truncate">
+            <a href="{{ vehicle.get_absolute_url }}" class="text-dark text-decoration-none">
+                {{ vehicle.year }} {{ vehicle.make }} {{ vehicle.model }}
+            </a>
+        </h5>
+        {% if vehicle.trim %}
+            <div class="text-secondary small fw-bold mb-2 text-truncate">{{ vehicle.trim }}</div>
+        {% else %}
+            <div class="text-muted small mb-2">&nbsp;</div>
+        {% endif %}
+
+        <div class="vehicle-spec-pills">
+            <span class="spec-pill"><i class="bi bi-speedometer2"></i> {{ vehicle.odometer|indian_number }} km</span>
+            <span class="spec-pill"><i class="bi bi-fuel-pump"></i> {{ vehicle.fuel_type }}</span>
+            <span class="spec-pill"><i class="bi bi-gear"></i> {{ vehicle.transmission|truncatechars:10 }}</span>
+            {% if vehicle.horsepower %}
+                <span class="spec-pill"><i class="bi bi-lightning-charge"></i> {{ vehicle.horsepower }} HP</span>
+            {% endif %}
+        </div>
+
+        <div class="mt-auto pt-3 border-top border-subtle d-flex justify-content-between align-items-center">
+            <a href="{{ vehicle.get_absolute_url }}" class="btn btn-workshop btn-sm">
+                <i class="bi bi-eye"></i> Details
+            </a>
+
+            <div class="btn-group">
+                <button type="button" class="btn btn-workshop btn-sm dropdown-toggle" data-bs-toggle="dropdown" title="Change Status">
+                    Status
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-3">
+                    <li>
+                        <button class="dropdown-item quick-vehicle-status-btn text-success small" data-vehicle-id="{{ vehicle.id }}" data-status="available">
+                            <i class="bi bi-check-circle me-1"></i> Available
+                        </button>
+                    </li>
+                    <li>
+                        <button class="dropdown-item quick-vehicle-status-btn text-warning small" data-vehicle-id="{{ vehicle.id }}" data-status="pending">
+                            <i class="bi bi-clock-history me-1"></i> Pending Sale
+                        </button>
+                    </li>
+                    <li>
+                        <button class="dropdown-item quick-vehicle-status-btn text-danger small" data-vehicle-id="{{ vehicle.id }}" data-status="sold">
+                            <i class="bi bi-bag-check me-1"></i> Sold
+                        </button>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item text-secondary small" href="{% url 'inventory:vehicle_edit' vehicle.id %}">
+                            <i class="bi bi-pencil me-1"></i> Edit Vehicle
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

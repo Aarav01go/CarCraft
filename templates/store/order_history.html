@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% load humanize %}
 
 {% block title %}Order History | CarCraft{% endblock %}
 
@@ -85,5 +84,8 @@
             </table>
         </div>
     </div>
+
+    <!-- Pagination -->
+    {% include 'includes/pagination.html' %}
 </div>
 {% endblock %}
