@@ -111,10 +111,6 @@ class Order(models.Model):
     def get_absolute_url(self):
         return reverse('store:order_confirmation', kwargs={'order_number': self.order_number})
 
-    @property
-    def items_count(self):
-        return sum(item.quantity for item in self.items.all())
-
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)

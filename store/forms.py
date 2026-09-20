@@ -1,5 +1,5 @@
 from django import forms
-from .models import Order, Part, Category
+from .models import Order, Part
 
 
 class AddToCartForm(forms.Form):

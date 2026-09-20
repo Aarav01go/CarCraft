@@ -1,14 +1,13 @@
-from decimal import Decimal
 from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View, TemplateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, View, TemplateView
 from django.urls import reverse_lazy, reverse
 from django.contrib import messages
-from django.db import transaction
-from django.db.models import Q, Count
+from django.db.models import Count
 from django.http import JsonResponse
-from .models import Part, Category, Order, OrderItem
+from .models import Part, Category, Order
 from .forms import AddToCartForm, CheckoutForm, PartFilterForm, PartForm
 from .cart import Cart
+from .services import get_cart_summary, process_checkout, filter_parts, filter_orders
 
 
 class CatalogView(ListView):
@@ -25,28 +24,9 @@ class CatalogView(ListView):
         category_slug = self.request.GET.get('category')
         if category_slug:
             self.selected_category = Category.objects.filter(slug=category_slug).first()
-            if self.selected_category:
-                queryset = queryset.filter(category=self.selected_category)
 
-        if self.form.is_valid():
-            q = self.form.cleaned_data.get('q')
-            in_stock = self.form.cleaned_data.get('in_stock')
-            sort = self.form.cleaned_data.get('sort')
-
-            if q:
-                queryset = queryset.filter(
-                    Q(name__icontains=q) |
-                    Q(sku__icontains=q) |
-                    Q(brand__icontains=q) |
-                    Q(description__icontains=q)
-                )
-            if in_stock:
-                queryset = queryset.filter(stock__gt=0)
-            if sort:
-                queryset = queryset.order_by(sort)
-            else:
-                queryset = queryset.order_by('-featured', 'name')
-        return queryset
+        filter_data = self.form.cleaned_data if self.form.is_valid() else None
+        return filter_parts(queryset, filter_data=filter_data, category=self.selected_category)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -78,11 +58,7 @@ class CartDetailView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         cart = Cart(self.request)
-        context['cart'] = cart
-        context['subtotal'] = cart.get_subtotal()
-        context['tax'] = cart.get_tax()
-        context['shipping'] = cart.get_shipping()
-        context['total'] = cart.get_total_price()
+        context.update(get_cart_summary(cart))
         return context
 
 
@@ -171,15 +147,9 @@ class CheckoutView(View):
             messages.warning(request, "Your cart is currently empty. Browse our catalog to add parts.")
             return redirect('store:catalog')
 
-        form = CheckoutForm()
-        return render(request, 'store/checkout.html', {
-            'form': form,
-            'cart': cart,
-            'subtotal': cart.get_subtotal(),
-            'tax': cart.get_tax(),
-            'shipping': cart.get_shipping(),
-            'total': cart.get_total_price(),
-        })
+        context = {'form': CheckoutForm()}
+        context.update(get_cart_summary(cart))
+        return render(request, 'store/checkout.html', context)
 
     def post(self, request):
         cart = Cart(request)
@@ -189,55 +159,15 @@ class CheckoutView(View):
 
         form = CheckoutForm(request.POST)
         if form.is_valid():
-            try:
-                with transaction.atomic():
-                    # Verify stock for all items
-                    for item in cart:
-                        part = item['part']
-                        if not part or part.stock < item['quantity']:
-                            raise ValueError(
-                                f"Insufficient stock for {part.name if part else 'Item'}. "
-                                f"Requested: {item['quantity']}, Available: {part.stock if part else 0}"
-                            )
+            order, error = process_checkout(form, cart)
+            if order:
+                messages.success(request, f"🎉 Order #{order.order_number} confirmed! Thank you for your purchase.")
+                return redirect('store:order_confirmation', order_number=order.order_number)
+            messages.error(request, error)
 
-                    # Create order
-                    order = form.save(commit=False)
-                    order.total_amount = cart.get_total_price()
-                    order.save()
-
-                    # Create order items & decrement stock
-                    for item in cart:
-                        part = item['part']
-                        OrderItem.objects.create(
-                            order=order,
-                            part=part,
-                            part_name=part.name,
-                            part_sku=part.sku,
-                            price=item['price_decimal'],
-                            quantity=item['quantity']
-                        )
-                        # Decrement stock
-                        part.stock -= item['quantity']
-                        part.save(update_fields=['stock'])
-
-                    # Clear cart after successful transaction
-                    cart.clear()
-                    messages.success(request, f"🎉 Order #{order.order_number} confirmed! Thank you for your purchase.")
-                    return redirect('store:order_confirmation', order_number=order.order_number)
-
-            except ValueError as e:
-                messages.error(request, str(e))
-            except Exception as e:
-                messages.error(request, f"An unexpected error occurred during checkout: {str(e)}")
-
-        return render(request, 'store/checkout.html', {
-            'form': form,
-            'cart': cart,
-            'subtotal': cart.get_subtotal(),
-            'tax': cart.get_tax(),
-            'shipping': cart.get_shipping(),
-            'total': cart.get_total_price(),
-        })
+        context = {'form': form}
+        context.update(get_cart_summary(cart))
+        return render(request, 'store/checkout.html', context)
 
 
 class OrderConfirmationView(DetailView):
@@ -257,14 +187,7 @@ class OrderHistoryView(ListView):
     def get_queryset(self):
         query = self.request.GET.get('q', '').strip()
         qs = Order.objects.prefetch_related('items').all()
-        if query:
-            qs = qs.filter(
-                Q(order_number__icontains=query) |
-                Q(customer_email__icontains=query) |
-                Q(customer_name__icontains=query) |
-                Q(customer_phone__icontains=query)
-            )
-        return qs
+        return filter_orders(qs, query)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
