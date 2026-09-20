@@ -64,7 +64,7 @@ main {
   flex: 1 0 auto;
 }
 
-h1, h2, h3, h4, h5, h6, .brand-font {
+h1, h2, h3, h4, h5, h6 {
   font-family: var(--cc-font-family);
   font-weight: 800;
   letter-spacing: -0.03em;
@@ -100,11 +100,11 @@ a:hover {
   color: var(--cc-text-secondary) !important;
 }
 
-.text-accent, .text-lime {
+.text-accent {
   color: #9ab818 !important; /* legible text variant for light bg */
 }
 
-.contrast-panel .text-accent, .contrast-panel .text-lime, .bg-dark .text-accent, .btn-dark-panel .text-accent {
+.contrast-panel .text-accent, .bg-dark .text-accent, .btn-dark-panel .text-accent {
   color: var(--cc-accent) !important;
 }
 
@@ -112,7 +112,7 @@ a:hover {
   color: var(--cc-text-primary) !important;
 }
 
-.text-warning, .brand-accent {
+.text-warning {
   color: var(--cc-text-primary) !important;
 }
 
@@ -248,13 +248,13 @@ a:hover {
 }
 
 /* Contrast Dark Panel Button (#161616) */
-.btn-dark-panel, .btn-cyan {
+.btn-dark-panel {
   background-color: var(--cc-contrast-panel);
   color: #FFFFFF !important;
   border: 1px solid var(--cc-contrast-panel);
 }
 
-.btn-dark-panel:hover, .btn-cyan:hover {
+.btn-dark-panel:hover {
   background-color: var(--cc-contrast-elev);
   color: var(--cc-accent) !important;
   border-color: var(--cc-contrast-elev);
@@ -262,14 +262,14 @@ a:hover {
 }
 
 /* Surface / Minimal Button (#FFFFFF with #E5E5E3 border) */
-.btn-workshop, .btn-outline-apex, .btn-outline-light {
+.btn-workshop {
   background-color: var(--cc-surface);
   color: var(--cc-text-primary) !important;
   border: 1px solid var(--cc-border);
   box-shadow: var(--cc-shadow-sm);
 }
 
-.btn-workshop:hover, .btn-outline-apex:hover, .btn-outline-light:hover {
+.btn-workshop:hover {
   background-color: var(--cc-base-bg);
   border-color: #d1d1cf;
   color: #000000 !important;
@@ -298,7 +298,7 @@ a:hover {
 }
 
 /* Rich Near-Black Contrast Panels (#161616) */
-.contrast-panel, .bg-dark-panel {
+.contrast-panel {
   background-color: var(--cc-contrast-panel) !important;
   color: #FFFFFF !important;
   border-radius: var(--cc-radius-lg);
@@ -894,7 +894,7 @@ a:hover {
   color: #FFFFFF !important;
 }
 
-.badge.bg-warning, .badge.bg-accent {
+.badge.bg-warning {
   background-color: var(--cc-accent) !important;
   color: var(--cc-contrast-panel) !important;
 }

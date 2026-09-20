@@ -75,8 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         })
-        .catch(err => {
-            console.warn('Availability check error:', err);
+        .catch(() => {
             availabilityBadge.innerHTML = `<span class="text-muted">Bay auto-assignment active</span>`;
         });
     }
@@ -84,7 +83,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (bookingDateInput && bookingSlotInput) {
         bookingDateInput.addEventListener('change', checkSlotAvailability);
         bookingSlotInput.addEventListener('change', checkSlotAvailability);
-        // Initial check on load
         if (bookingDateInput.value && bookingSlotInput.value) {
             checkSlotAvailability();
         }
@@ -114,13 +112,11 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    // Update all cart count badges across the page
                     document.querySelectorAll('.cart-count-badge').forEach(badge => {
                         badge.textContent = data.cart_count;
                         badge.classList.remove('d-none');
                     });
 
-                    // Flash button state
                     if (submitBtn) {
                         submitBtn.innerHTML = `<i class="bi bi-check-lg me-1"></i> Added!`;
                         submitBtn.classList.remove('btn-apex', 'btn-workshop');
@@ -134,8 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             })
-            .catch(err => {
-                console.error('Cart add error:', err);
+            .catch(() => {
                 if (submitBtn) {
                     submitBtn.innerHTML = originalBtnHtml;
                     submitBtn.disabled = false;
@@ -178,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             })
-            .catch(err => console.error('Status change error:', err));
+            .catch(() => {});
         });
     });
 });
